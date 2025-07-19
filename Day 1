@@ -19,5 +19,3 @@ FROM follower_count fc
 CROSS JOIN user_stats us
 ORDER BY fc.user_id;
 
-
-/**Explanation : https://chatgpt.com/c/6754bd45-8ba4-8007-b3c2-e77c2869246e/
