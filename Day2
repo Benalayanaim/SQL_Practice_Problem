@@ -1,0 +1,349 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+#https://chatgpt.com/c/67571059-0274-8007-aa92-97b5328957d8
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Actors%20who%20cooperated%20with%20Directors%20atleast%20three%20times.sql
+
+SELECT actor_id, director_id 
+FROM ActorDirector
+GROUP BY actor_id, director_id
+HAVING COUNT(timestamp) >= 3;
+
+
+
+/*Resource*/
+#https://www.geeksforgeeks.org/postgresql-nullif-function/
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+
+#Leetcode 2
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Ads%20performance.sql
+
+/**solution 1**/ 
+SELECT 
+    ad_id,
+    ROUND(
+        100.0 * SUM(CASE WHEN action = 'Clicked' THEN 1 ELSE 0 END) /
+        NULLIF(SUM(CASE WHEN action IN ('Clicked', 'Viewed') THEN 1 ELSE 0 END), 0),
+        2
+    ) AS ctr
+FROM 
+    Ads
+GROUP BY 
+    ad_id
+ORDER BY 
+    ctr DESC, ad_id ASC;
+
+    
+/**solution 2**/ 
+with t1 as(
+select ad_id, sum(case when action in ('Clicked') then 1 else 0 end) as clicked
+from ads
+group by ad_id
+)
+
+, t2 as
+(
+Select ad_id as ad, sum(case when action in ('Clicked','Viewed') then 1 else 0 end) as total
+from ads
+group by ad_id
+)
+
+Select a.ad_id, coalesce(round((clicked +0.0)/nullif((total +0.0),0)*100,2),0) as ctr
+from
+(
+select *
+from t1 join t2
+on t1.ad_id = t2.ad) a
+order by ctr desc, ad_id 
+
+
+/*Resource*/
+#https://www.geeksforgeeks.org/sql-having-clause-with-examples/
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+
+#Leetcode 3
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Article%20views.sql
+
+/**solution 1**/ 
+select distinct author_id as id
+from views
+where author_id = viewer_id
+order by author_id
+    
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+
+#Leetcode 4
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Average%20selling%20price.sql
+
+/**solution 1**/ 
+SELECT 
+    p.product_id, 
+    COALESCE(ROUND(SUM(p.price * u.units * 1.0) / SUM(u.units), 2), 0) AS average_price
+FROM 
+    Prices p
+LEFT JOIN 
+    UnitsSold u 
+ON 
+    p.product_id = u.product_id
+    AND purchase_date BETWEEN start_date AND end_date
+GROUP BY 
+    p.product_id;
+
+
+/**solution 2**/ 
+SELECT
+    p.product_id,
+    COALESCE(ROUND(CAST(SUM(p.price * u.units) / SUM(units)::FLOAT AS NUMERIC), 2), 0) average_price
+FROM 
+    Prices p
+LEFT JOIN 
+    UnitsSold u
+ON 
+    p.product_id=u.product_id
+    AND p.start_date <= u.purchase_date AND p.end_date >= u.purchase_date
+GROUP BY 
+    p.product_id;
+    
+
+---Resource
+#https://stackoverflow.com/questions/43934155/sqlite-ifnull-in-postgres
+"""I used COALESCE mostly because it's part of the SQL standard, so it works across different databases. IFNULL() would have worked too in MySQL, 
+but I prefer using COALESCE for better compatibility if the query ever needs to run somewhere else."""
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+
+#Leetcode 5
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Big%20Countries.sql
+
+/**solution 1**/ 
+select name, population , area
+
+from World
+
+where area >= 3000000 or population >= 25000000
+
+
+/**solution 2**/ 
+select name, population, area 
+from World where area>=3000000 
+
+union 
+
+select name, population, area 
+from World 
+where population>=25000000
+    
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+
+#Probelm 1
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/01-olympics-gold-medals.md
+
+
+/*Solution N1*/
+WITH gold_only_swimmers AS (
+    SELECT gold AS swimmer
+    FROM events
+    WHERE gold NOT IN (
+        SELECT silver FROM events
+        WHERE silver IS NOT NULL
+        UNION
+        SELECT bronze FROM events
+        WHERE bronze IS NOT NULL
+    )
+)
+SELECT gold AS swimmer, COUNT(*) AS gold_medal_count
+FROM events
+WHERE gold IN (SELECT swimmer FROM gold_only_swimmers)
+GROUP BY gold;
+
+
+
+/*Solution N2*/
+
+SELECT gold AS swimmer, COUNT(*) AS gold_medal_count
+FROM events
+WHERE gold NOT IN (
+        SELECT silver FROM events WHERE silver IS NOT NULL
+        UNION
+        SELECT bronze FROM events WHERE bronze IS NOT NULL
+    )
+GROUP BY gold;
+
+
+
+/*Resource to read */
+#https://www.geeksforgeeks.org/sql-union-operator/
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Probelm 2
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/02-find-business-days.md
+
+WITH date_range AS (
+    SELECT 
+        t.ticket_id,
+        generate_series(t.create_date, t.resolved_date, '1 day'::interval)::date AS business_date
+    FROM 
+        tickets t
+),
+filtered_dates AS (
+    SELECT 
+        dr.ticket_id,
+        dr.business_date
+    FROM 
+        date_range dr
+    LEFT JOIN 
+        holidays h 
+    ON 
+        dr.business_date = h.holiday_date
+    WHERE 
+        EXTRACT(ISODOW FROM dr.business_date) NOT IN (6, 7) -- Exclude weekends (6 = Saturday, 7 = Sunday)
+        AND h.holiday_date IS NULL -- Exclude public holidays
+)
+SELECT 
+    ticket_id,
+    COUNT(*) AS business_days
+FROM 
+    filtered_dates
+GROUP BY 
+    ticket_id
+ORDER BY 
+    ticket_id;
+
+
+
+/*Resource*/
+#https://www.postgresql.org/docs/current/functions-srf.html
+
+#https://chatgpt.com/c/67571059-0274-8007-aa92-97b5328957d8
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Probelm 3
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/03-amazon-people-inside-hospital.md
+
+
+/*Solution N1*/
+WITH CTE as (	
+	SELECT   emp_id, 
+	         MAX(CASE WHEN action='in' THEN time END) AS intime,
+	         MAX(CASE WHEN action='out' THEN time END) AS outtime
+	FROM     hospital
+	GROUP BY emp_id
+)
+SELECT COUNT(*) as people_inside
+FROM   CTE
+WHERE  intime > outtime OR outtime IS NULL
+
+
+/*Solution N2*/
+WITH ranked_actions AS (
+    SELECT 
+        emp_id,
+        action,
+        time,
+        ROW_NUMBER() OVER (PARTITION BY emp_id ORDER BY time DESC) AS rn
+    FROM hospital
+)
+SELECT 
+    COUNT(*) AS people_inside
+FROM ranked_actions
+WHERE rn = 1 AND action = 'in';
+
+
+
+/*Resource*/
+#https://www.geeksforgeeks.org/postgresql-case/
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Probelm 4
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/04-airbnb-convert-csv-to-rows.md
+
+/*Solution N1*/
+WITH exploded_room_types AS (
+    SELECT 
+        user_id,
+        date_searched,
+        TRIM(UNNEST(STRING_TO_ARRAY(filter_room_types, ','))) AS room_type
+    FROM airbnb_searches
+),
+room_type_counts AS (
+    SELECT 
+        room_type,
+        COUNT(*) AS search_count
+    FROM exploded_room_types
+    GROUP BY room_type
+)
+SELECT 
+    room_type,
+    search_count
+FROM room_type_counts
+ORDER BY search_count DESC;
+
+
+/*Solution N2*/
+SELECT value, COUNT(*) AS count
+FROM airbnb_searches, UNNEST(STRING_TO_ARRAY(filter_room_types, ',')) AS value
+GROUP BY value
+ORDER BY count DESC, value;
+
+
+
+/*Resource*/
+#https://www.postgresql.org/docs/9.1/functions-array.html
+
+/****************************************************************************************************************************/
+
+/****************************************************************************************************************************/

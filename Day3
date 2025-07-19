@@ -1,0 +1,395 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+#https://chatgpt.com/c/675827b6-62c4-8007-8ab9-2b3d81f9589b
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+
+#Leetcode 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Biggest%20Single%20number.sql
+
+/**solution 1**/ 
+SELECT MAX(num) AS num
+FROM (
+    SELECT num
+    FROM MyNumbers
+    GROUP BY num
+    HAVING COUNT(num) = 1
+) AS unique_numbers;
+
+/*Solution 2*/
+
+select 
+    max(num) as num 
+from 
+    MyNumbers 
+where  
+    num in(select num from MyNumbers group by num having count(num)=1);
+
+/**solution 3**/ 
+WITH CTE AS (
+    SELECT num, COUNT(*) as num_quantity
+    FROM MyNumbers
+    GROUP BY num
+)
+
+SELECT MAX(num) as num
+FROM CTE
+WHERE num_quantity = 1;
+
+
+
+/*Resource*/
+#https://www.geeksforgeeks.org/sql-having-clause-with-examples/
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 2
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Classes%20more%20than%205%20students.sql
+
+/**solution 1**/ 
+SELECT class
+FROM Courses
+GROUP BY class
+HAVING COUNT(class) >= 5;
+
+
+/**solution 2**/ 
+
+-- Write your PostgreSQL query statement below
+with master as (
+    select class, count(class) as count_class
+    from Courses
+    group by class
+)
+
+select class
+from master
+where count_class >= 5;
+
+---Resource : https://www.bing.com/videos/riverview/relatedvideo?&q=group+by+sql&&mid=B85FD5D0B1BA778C5233B85FD5D0B1BA778C5233&&FORM=VRDGAR
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+
+
+
+#Leetcode 3
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Combine%20two%20tables.sql
+
+/**solution 1**/ 
+
+select 
+    p.firstName, p.lastName,  a.city, a.state
+
+from 
+    Person as p
+
+left join 
+    Address as a
+
+on 
+    p.personId = a.personId
+
+
+
+/**solution 2**/ 
+
+
+select 
+    p.firstName, p.lastName, a.city, a.state
+from 
+    person p
+left Join 
+    address a 
+using
+    (personId) 
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 4
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Consecutive%20available%20seats.sql
+
+/**solution 1**/ 
+Select seat_id
+from(
+select seat_id, free,
+
+lead(free,1) over() as next,
+lag(free,1) over() as prev
+
+from cinema) a
+
+where a.free=True and (next = True or prev=True)
+order by seat_id
+
+
+
+
+/**solution 2**/ 
+
+
+WITH ConsecutiveSeats AS (
+    SELECT
+        seat_id,
+        seat_id - ROW_NUMBER() OVER (ORDER BY seat_id) AS grp
+    FROM
+        cinema
+    WHERE
+        free = 1
+),
+GroupedSeats AS (
+    SELECT
+        grp,
+        COUNT(*) AS count_seats,
+        MIN(seat_id) AS start_seat,
+        MAX(seat_id) AS end_seat
+    FROM
+        ConsecutiveSeats
+    GROUP BY
+        grp
+    HAVING
+        COUNT(*) >= 2
+)
+SELECT
+    seat_id
+FROM
+    cinema
+WHERE
+    free = 1
+    AND seat_id BETWEEN (SELECT MIN(start_seat) FROM GroupedSeats)
+                    AND (SELECT MAX(end_seat) FROM GroupedSeats)
+ORDER BY
+    seat_id;
+
+
+"Resource"
+--#https://www.geeksforgeeks.org/postgresql-lead-function/
+--https://www.geeksforgeeks.org/postgresql-lead-function/
+--https://www.geeksforgeeks.org/postgresql-row_number-function/
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 5
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Create%20Session%20bar%20chart.sql
+
+/**solution 1**/ 
+SELECT
+    CASE
+        WHEN duration < 300 THEN '[0-5>'
+        WHEN duration >= 300 AND duration < 600 THEN '[5-10>'
+        WHEN duration >= 600 AND duration < 900 THEN '[10-15>'
+        ELSE '15 or more'
+    END AS bin,
+    COUNT(*) AS total
+FROM
+    Sessions
+GROUP BY
+    bin
+ORDER BY
+    bin;
+
+
+
+/**solution 2**/ 
+
+
+(Select '[0-5>' as bin, 
+ sum(case when duration/60 < 5 then 1 else 0 end) as total from Sessions)
+ union
+(Select '[5-10>' as bin, 
+ sum(case when ((duration/60 >= 5) and (duration/60 < 10)) then 1 else 0 end) as total from Sessions)
+ union
+(Select '[10-15>' as bin, 
+ sum(case when ((duration/60 >= 10) and (duration/60 < 15)) then 1 else 0 end) as total from Sessions)
+ union
+(Select '15 or more' as bin, 
+ sum(case when duration/60 >= 15 then 1 else 0 end) as total from Sessions)
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/05-epam-systems-employee-salaries.md
+
+/**solution 1**/ 
+SELECT emp_id, name, salary, dept_id
+FROM (
+    SELECT emp_id, name, salary, dept_id,
+           COUNT(*) OVER (PARTITION BY dept_id, salary) AS count_same_salary
+    FROM emp_salary
+) AS salary_counts
+WHERE count_same_salary > 1;
+
+
+
+
+/**solution 2**/ 
+
+
+SELECT e1.emp_id, e1.name, e1.salary, e1.dept_id
+FROM emp_salary e1
+JOIN emp_salary e2
+  ON e1.dept_id = e2.dept_id
+  AND e1.salary = e2.salary
+  AND e1.emp_id <> e2.emp_id
+ORDER BY e1.emp_id;
+
+
+/*Solution 3*/
+
+WITH CTE AS (
+	SELECT   dept_id, salary
+	FROM     emp_salary
+	GROUP BY 1, 2
+	HAVING   COUNT(*) > 1
+)
+SELECT emp_id, name, salary, dept_id
+FROM   CTE c JOIN emp_salary es USING(dept_id, salary)
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 2
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/06-linkedin-power-creators.md
+
+/**solution 1**/ 
+SELECT DISTINCT pp.profile_id
+FROM personal_profiles pp
+JOIN employee_company ec
+  ON pp.profile_id = ec.personal_profile_id
+JOIN company_pages cp
+  ON ec.company_id = cp.company_id
+WHERE pp.followers > cp.followers;
+
+
+
+
+-- Solution 2: using MAX() aggregate function w/ window function.
+
+WITH CTE as (
+    SELECT pp.profile_id, 
+           pp.name as creator_name, 
+           pp.followers as personal_followers, 
+           MAX(cp.followers) OVER(PARTITION BY pp.profile_id, pp.name) as max_company_followers
+    FROM   personal_profiles pp JOIN employee_company ec ON pp.profile_id=ec.personal_profile_id 
+                                JOIN company_pages cp USING(company_id)
+)
+SELECT   profile_id, creator_name
+FROM     CTE
+WHERE    personal_followers > max_company_followers
+GROUP BY 1, 2
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 3
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/07-photoshop-revenue-analysis.md
+
+/**solution 1**/ 
+SELECT customer_id, 
+       SUM(revenue) AS revenue
+FROM adobe_transactions
+WHERE customer_id IN (
+          SELECT DISTINCT customer_id 
+          FROM adobe_transactions 
+          WHERE product = 'Photoshop'
+      )
+  AND product != 'Photoshop'
+GROUP BY customer_id;
+
+
+
+
+-- Solution 2: 
+WITH photoshop_customers AS (
+    SELECT DISTINCT customer_id
+    FROM adobe_transactions
+    WHERE product = 'Photoshop'
+),
+non_photoshop_revenue AS (
+    SELECT 
+        customer_id, 
+        SUM(revenue) AS total_revenue
+    FROM adobe_transactions
+    WHERE product != 'Photoshop'
+    GROUP BY customer_id
+)
+SELECT 
+    npr.customer_id, 
+    npr.total_revenue
+FROM non_photoshop_revenue npr
+JOIN photoshop_customers pc
+ON npr.customer_id = pc.customer_id;
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Hard 
+#https://www.linkedin.com/posts/im-nsk_sql-sql-activity-7253302018088263680-fDXb/?utm_source=share&utm_medium=member_desktop#
+
+/**solution 1**/ 
+
+WITH MonthlyRevenue AS (
+    SELECT 
+        TO_CHAR(created_at, 'YYYY-MM') AS year_month,
+        SUM(value) AS total_revenue
+    FROM sf_transactions
+    GROUP BY TO_CHAR(created_at, 'YYYY-MM')
+),
+RevenueChange AS (
+    SELECT 
+        year_month,
+        total_revenue,
+        LAG(total_revenue) OVER (ORDER BY year_month) AS previous_revenue
+    FROM MonthlyRevenue
+)
+SELECT 
+    year_month,
+    total_revenue,
+    ROUND(
+        CASE 
+            WHEN previous_revenue IS NULL THEN NULL
+            ELSE ((total_revenue - previous_revenue) / previous_revenue::NUMERIC) * 100
+        END, 
+        2
+    ) AS percentage_change
+FROM RevenueChange
+ORDER BY year_month;

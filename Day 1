@@ -1,0 +1,23 @@
+#IDE 
+#https://sqliteonline.com/
+
+/*Problem : https://www.linkedin.com/posts/im-nsk_sql-facebook-meta-activity-7252936016750104578-AzOz/?utm_source=share&utm_medium=member_desktop*/
+
+
+WITH user_stats AS (
+ SELECT COUNT(DISTINCT user_id) + COUNT(DISTINCT follower_id) AS total_users
+ FROM famous
+),
+follower_count AS (
+ SELECT user_id, COUNT(follower_id) AS followers
+ FROM famous
+ GROUP BY user_id
+)
+SELECT fc.user_id, 
+ (fc.followers * 100.0) / us.total_users AS famous_percentage
+FROM follower_count fc
+CROSS JOIN user_stats us
+ORDER BY fc.user_id;
+
+
+/**Explanation : https://chatgpt.com/c/6754bd45-8ba4-8007-b3c2-e77c2869246e/
