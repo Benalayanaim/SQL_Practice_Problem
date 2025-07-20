@@ -1,0 +1,377 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+#https://chatgpt.com/c/675c88fe-61c8-8007-b3cf-002fcd75731f
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+
+#Leetcode 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Game%20Play%20Analysis%201.sql
+
+/**solution 1**/ 
+-- Write your PostgreSQL query statement below
+select player_id, min(event_date) as first_login
+from Activity
+group by player_id;
+
+
+/*Solution 2*/
+
+wWITH RankedActivity AS (
+    SELECT
+        player_id,
+        event_date AS first_login,
+        ROW_NUMBER() OVER (PARTITION BY player_id ORDER BY event_date ASC) AS row_num
+    FROM
+        Activity
+)
+SELECT
+    player_id,
+    first_login
+FROM
+    RankedActivity
+WHERE
+    row_num = 1;
+
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 2
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Game%20play%20analysis%202.sql
+
+/**solution 1**/     
+
+WITH cte1 AS (
+  SELECT 
+    player_id, 
+    device_id, 
+    event_date,
+    ROW_NUMBER() OVER (PARTITION BY player_id ORDER BY event_date ASC) AS rn
+  FROM Activity
+)
+SELECT player_id, device_id AS device
+FROM cte1
+WHERE rn = 1;
+
+
+/**solution 2**/
+With table1 as
+(
+   Select player_id, device_id,
+   Rank() OVER(partition by player_id
+               order by event_date) as rk
+   From Activity
+)
+Select t.player_id, t.device_id
+from table1 as t
+where t.rk=1
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+
+
+
+#Leetcode 3
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Group%20sold%20products%20by%20the%20date.sql
+
+/**solution 1**/ 
+
+--For each date -- find no of diff prod sold
+--order prod name lexico, order by sell_date
+--Output -- sell_date, num_sold , products
+
+select
+    sell_date,
+    count(distinct(product)) as num_sold,
+    string_agg(distinct(product), ',' order by product) as products
+from activities
+group by sell_date
+order by sell_date
+
+
+--Resource :https://www.geeksforgeeks.org/postgresql-string_agg-function/
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 4
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Immediate%20food%20delivery.sql
+
+/**solution 1**/ 
+SELECT 
+    ROUND(
+        100.0 * SUM(CASE WHEN order_date = customer_pref_delivery_date THEN 1 ELSE 0 END) / COUNT(*), 
+        2
+    ) AS immediate_percentage
+FROM Delivery;
+
+
+
+/**solution 2**/ 
+SELECT 
+    ROUND(AVG(CASE WHEN order_date = customer_pref_delivery_date THEN 1 ELSE 0 END) * 100, 2) AS immediate_percentage
+FROM delivery;
+
+--for better undesrtanding how the average works : https://www.calculator.net/average-calculator.html
+
+
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 5
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/List%20the%20products%20ordered%20in%20a%20period.sql
+
+
+-- Solution 3:
+"basic solution"
+SELECT a.product_name, a.unit
+FROM (
+    SELECT 
+        p.product_name, 
+        SUM(o.unit) AS unit
+    FROM orders o 
+    JOIN products p
+    ON o.product_id = p.product_id
+    WHERE EXTRACT(MONTH FROM order_date) = 2 AND EXTRACT(YEAR FROM order_date) = 2020
+    GROUP BY p.product_name
+) a
+WHERE a.unit >= 100;
+
+
+
+
+/**solution 1**/ 
+SELECT p.product_name AS product_name, SUM(o.unit) AS unit
+FROM Products AS p
+JOIN Orders AS o USING(product_id)
+WHERE order_date BETWEEN '2020-02-01' AND '2020-02-29'
+GROUP BY product_name
+HAVING SUM(o.unit) >= 100;
+
+
+---resource to use havinh with aggreagation function : https://www.geeksforgeeks.org/sql-having-clause-with-examples/
+
+
+
+
+
+/**solution 2**/ 
+
+-- Write your PostgreSQL query statement below
+select prod.product_name,
+sum(ord.unit) as unit
+from Products as prod
+inner join Orders as ord
+on prod.product_id = ord.product_id
+where to_char(ord.order_date, 'YYYY-MM') = '2020-02'
+group by prod.product_name
+having sum(ord.unit) >= 100
+
+
+---Resource to_char:
+---https://neon.tech/postgresql/postgresql-string-functions/postgresql-to_char
+---https://www.postgresql.org/docs/current/functions-formatting.html
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/14-ameriprise-team-members-criteria.md
+
+
+---Solution 1
+WITH TeamCriteria AS (
+    SELECT
+        team_id,
+        SUM(CASE WHEN criteria_1 = 'Y' AND criteria_2 = 'Y' THEN 1 ELSE 0 END) AS valid_members
+    FROM
+        data
+    GROUP BY
+        team_id
+),
+FinalOutput AS (
+    SELECT
+        d.*,
+        CASE 
+            WHEN tc.valid_members >= 2 AND d.criteria_1 = 'Y' AND d.criteria_2 = 'Y' THEN 'Y'
+            ELSE 'N'
+        END AS output
+    FROM
+        data d
+    LEFT JOIN
+        TeamCriteria tc
+    ON
+        d.team_id = tc.team_id
+)
+SELECT *
+FROM FinalOutput
+ORDER BY team_id, member_id;
+
+
+
+---Solution 2
+WITH TeamValidMembers AS (
+    SELECT 
+        team_id, 
+        COUNT(*) AS valid_members
+    FROM data
+    WHERE criteria_1 = 'Y' AND criteria_2 = 'Y'
+    GROUP BY team_id
+)
+SELECT 
+    d.team_id, 
+    d.member_id, 
+    d.criteria_1, 
+    d.criteria_2, 
+    CASE 
+        WHEN tvm.valid_members >= 2 AND d.criteria_1 = 'Y' AND d.criteria_2 = 'Y' THEN 'Y'
+        ELSE 'N'
+    END AS output
+FROM data d
+LEFT JOIN TeamValidMembers tvm
+ON d.team_id = tvm.team_id;
+
+
+/*Solution 3:*/
+WITH criteria_check AS (
+    SELECT *, 
+           CASE 
+               WHEN criteria_1 = 'Y' AND criteria_2 = 'Y' THEN 1 
+               ELSE 0 
+           END AS criteria_flag
+    FROM data
+),
+criteria_summary AS (
+    SELECT *, 
+           SUM(criteria_flag) OVER(PARTITION BY team_id) AS flag_sum
+    FROM criteria_check
+)
+SELECT team_id, 
+       member_id, 
+       criteria_1, 
+       criteria_2,
+       CASE 
+           WHEN criteria_flag = 1 AND flag_sum >= 2 THEN 'Y' 
+           ELSE 'N' 
+       END AS output
+FROM criteria_summary;
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 2
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/15-tiger-analytics-adult-child-pairing.md
+
+
+/**solution 1**/ 
+WITH adults AS (
+    SELECT 
+        person AS adult_person,
+        ROW_NUMBER() OVER (ORDER BY person) AS adult_row
+    FROM family
+    WHERE type = 'Adult'
+),
+children AS (
+    SELECT 
+        person AS child_person,
+        ROW_NUMBER() OVER (ORDER BY person) AS child_row
+    FROM family
+    WHERE type = 'Child'
+)
+SELECT 
+    a.adult_person,
+    c.child_person
+FROM adults a
+LEFT JOIN children c
+ON a.adult_row = c.child_row
+ORDER BY a.adult_row;
+
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 3
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/16-pwc-increase-in-revenue.md
+
+/**solution 1**/ 
+WITH revenue_diff AS (
+    SELECT 
+        company,
+        revenue - LAG(revenue) OVER (PARTITION BY company ORDER BY year) AS revenue_diff
+    FROM 
+        company_revenue
+),
+valid_companies AS (
+    SELECT 
+        company
+    FROM 
+        revenue_diff
+    WHERE 
+        revenue_diff <= 0
+    GROUP BY 
+        company
+)
+SELECT 
+    DISTINCT company AS company_w_ever_increasing_revenue
+FROM 
+    company_revenue
+WHERE 
+    company NOT IN (SELECT company FROM valid_companies);
+
+
+
+
+-- Solution 2: 
+WITH cte AS (
+    SELECT *, 
+           LEAD(revenue, 1, revenue) OVER (PARTITION BY company ORDER BY year) - revenue AS revenue_change, 
+           COUNT(*) OVER (PARTITION BY company) AS record_entries
+    FROM company_revenue
+),
+cte_2 AS (
+    SELECT *, 
+           SUM(CASE WHEN revenue_change >= 0 THEN 1 ELSE 0 END) OVER (PARTITION BY company) AS revenue_increase_flag
+    FROM cte
+)
+SELECT company AS company_w_ever_increasing_revenue
+FROM cte_2
+WHERE record_entries = revenue_increase_flag
+GROUP BY company;

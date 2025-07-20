@@ -1,0 +1,422 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+#https://chatgpt.com/c/675ada7d-6314-8007-af2e-83a3c1950fac
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+
+#Leetcode 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Employees%20earning%20more%20than%20their%20managers.sql
+
+/**solution 1**/ 
+SELECT e1.name AS Employee
+FROM Employee e1
+JOIN Employee e2 ON e1.managerId = e2.id
+WHERE e1.salary > e2.salary;
+
+
+/*Solution 2*/
+
+with manager as (
+    select *
+    from employee
+),
+
+employee_details as (
+    select e.id,
+        e.name,
+        e.salary as EmployeeSalary,
+        m.id as ManagerId,
+        m.name as ManagerName,
+        m.salary as ManagerSalary
+    from Employee as e
+    left join manager as m on e.managerId = m.id
+)
+
+select name as Employee
+from employee_details
+where employeesalary > managersalary;
+
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 2
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Find%20Customer%20Refree.sql
+
+/**solution 1**/     
+select name as name 
+from (select * from Customer where referee_id <> 2 or referee_id is null)
+
+/**solution 2**/
+--tnjem tekhdem aadi mouch dima nkhammem fy s3iib 
+select
+    c.name
+from
+    Customer c
+where 
+    c.referee_id!=2 OR c.referee_id IS NULL;
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+
+
+
+#Leetcode 3
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Find%20the%20team%20size.sql
+
+/**solution 1**/ 
+
+SELECT employee_id,
+       (SELECT COUNT(*)
+        FROM Employee e2
+        WHERE e2.team_id = e1.team_id) AS team_size
+FROM Employee e1;
+
+
+
+/**solution 2**/ 
+
+SELECT e.employee_id, t.team_size
+FROM Employee e
+JOIN (
+    SELECT team_id, COUNT(*) AS team_size
+    FROM Employee
+    GROUP BY team_id
+) t ON e.team_id = t.team_id;
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 4
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Friend%20Requests%201.sql
+
+/**solution 1**/ 
+WITH t1 AS (
+    SELECT DISTINCT sender_id, send_to_id
+    FROM friend_request
+), t2 AS (
+    SELECT DISTINCT requester_id, accepter_id
+    FROM request_accepted
+)
+SELECT 
+    COALESCE((
+        SELECT DISTINCT
+            ROUND((SELECT COUNT(*) FROM t2) * 1.0 / (SELECT COUNT(*) FROM t1), 2)
+    ), 0) AS accept_rate;
+
+
+
+/**solution 2**/ 
+SELECT 
+    COALESCE(
+        ROUND(
+            (SELECT COUNT(*) 
+             FROM (SELECT DISTINCT requester_id, accepter_id FROM request_accepted) AS distinct_requests) * 1.0 /
+            (SELECT COUNT(*) 
+             FROM (SELECT DISTINCT sender_id, send_to_id FROM friend_request) AS distinct_requests_sent), 
+        2), 
+    0) AS accept_rate;
+
+
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 5
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Friendly%20Movies%20streamed%20list.sql
+
+/**solution 1**/ 
+SELECT DISTINCT c.title
+FROM TVProgram t
+JOIN Content c ON t.content_id = c.content_id
+WHERE 
+    c.Kids_content = 'Y'
+    AND c.content_type = 'Movies'
+    AND t.program_date BETWEEN '2020-06-01' AND '2020-06-30';
+
+
+
+
+
+/**solution 2**/ 
+
+SELECT DISTINCT title
+FROM (
+    SELECT content_id, title
+    FROM content
+    WHERE kids_content = 'Y' AND content_type = 'Movies'
+) a
+JOIN tvprogram USING (content_id)
+WHERE EXTRACT(MONTH FROM program_date) = 6;
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/11-l%26t-highest-lowest-salary.md
+---Solution 1
+WITH salary_stats AS (
+    SELECT 
+        dep_id,
+        emp_name,
+        salary,
+        MAX(salary) OVER (PARTITION BY dep_id) AS max_salary,
+        MIN(salary) OVER (PARTITION BY dep_id) AS min_salary
+    FROM employee
+)
+SELECT 
+    dep_id,
+    MAX(CASE WHEN salary = max_salary THEN emp_name END) AS emp_name_max_salary,
+    MAX(CASE WHEN salary = min_salary THEN emp_name END) AS emp_name_min_salary
+FROM salary_stats
+GROUP BY dep_id;
+
+
+---Solution 2
+SELECT 
+    dep_id,
+    (SELECT emp_name 
+     FROM employee e1 
+     WHERE e1.salary = MAX(e.salary) AND e1.dep_id = e.dep_id) AS emp_name_max_salary,
+    (SELECT emp_name 
+     FROM employee e1 
+     WHERE e1.salary = MIN(e.salary) AND e1.dep_id = e.dep_id) AS emp_name_min_salary
+FROM employee e
+GROUP BY dep_id;
+
+---Solution 3
+WITH salary_window AS (
+    SELECT 
+        dep_id,
+        emp_name,
+        salary,
+        MAX(salary) OVER (PARTITION BY dep_id) AS max_salary,
+        MIN(salary) OVER (PARTITION BY dep_id) AS min_salary
+    FROM employeee
+)
+SELECT 
+    dep_id,
+    MAX(emp_name) FILTER (WHERE salary = max_salary) AS emp_name_max_salary,
+    MAX(emp_name) FILTER (WHERE salary = min_salary) AS emp_name_min_salary
+FROM salary_window
+GROUP BY dep_id;
+
+/*Solution 4:*/
+-- Solution 1: using two RANK() functions; and aggregation function w/ CASE WHEN // aslo my approach
+
+WITH CTE as (
+    SELECT dep_id,
+           emp_name,
+           salary, 
+           RANK() OVER(PARTITION BY dep_id ORDER BY salary desc) as highest_rn, 
+           RANK() OVER(PARTITION BY dep_id ORDER BY salary) as lowest_rn
+    FROM   employeee
+)
+SELECT   dep_id,
+         MAX(CASE WHEN highest_rn=1 THEN emp_name END) AS emp_name_max_salary,
+         MAX(CASE WHEN lowest_rn=1 THEN emp_name END) AS emp_name_min_salary
+FROM     CTE
+GROUP BY dep_id
+
+/*Resource*/
+--https://www.postgresql.org/docs/current/sql-expressions.html
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 2
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/12-call-start-end-time.md
+
+/**solution 1**/ 
+WITH ranked_start AS (
+    SELECT 
+        phone_number,
+        start_time,
+        ROW_NUMBER() OVER (PARTITION BY phone_number ORDER BY start_time) AS rn
+    FROM call_start_logs
+),
+ranked_end AS (
+    SELECT 
+        phone_number,
+        end_time,
+        ROW_NUMBER() OVER (PARTITION BY phone_number ORDER BY end_time) AS rn
+    FROM call_end_logs
+)
+SELECT 
+    rs.phone_number,
+    rs.start_time,
+    re.end_time,
+    ROUND(EXTRACT(EPOCH FROM (re.end_time - rs.start_time)) / 60, 2) AS call_duration_minutes
+FROM 
+    ranked_start rs
+JOIN 
+    ranked_end re
+ON 
+    rs.phone_number = re.phone_number
+    AND rs.rn = re.rn;
+
+
+
+
+
+-- Solution 2: 
+WITH start_logs_cte as (
+    SELECT *, 
+           ROW_NUMBER() OVER(PARTITION BY phone_number ORDER BY start_time) as start_rn
+    FROM   call_start_logs
+)
+, end_logs_cte as (
+    SELECT *, ROW_NUMBER() OVER(PARTITION BY phone_number ORDER BY end_time) as end_rn
+    FROM   call_end_logs
+)
+SELECT   sl.phone_number, 
+         start_time, 
+         end_time, 
+         ROUND(EXTRACT(EPOCH FROM AGE(end_time, start_time)) / 60, 2) as call_minutes
+FROM     start_logs_cte sl JOIN end_logs_cte el ON sl.start_rn=el.end_rn and sl.phone_number=el.phone_number
+ORDER BY phone_number, start_time
+
+
+/*Resource*/
+
+--https://www.postgresql.org/docs/8.1/functions-datetime.html
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 3
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/13-infosys-sql-puzzle.md
+
+/**solution 1**/ 
+WITH extracted_parts AS (
+    SELECT 
+        id,
+        formula,
+        value,
+        REGEXP_MATCHES(formula, '(\d+)[+-](\d+)') AS matches
+    FROM input
+),
+calculated_values AS (
+    SELECT 
+        id,
+        formula,
+        value,
+        (SELECT value FROM input WHERE id = (matches[1])::INT) AS value_1,
+        (SELECT value FROM input WHERE id = (matches[2])::INT) AS value_2,
+        CASE
+            WHEN formula LIKE '%+%' THEN 
+                (SELECT value FROM input WHERE id = (matches[1])::INT) +
+                (SELECT value FROM input WHERE id = (matches[2])::INT)
+            WHEN formula LIKE '%-%' THEN 
+                (SELECT value FROM input WHERE id = (matches[1])::INT) -
+                (SELECT value FROM input WHERE id = (matches[2])::INT)
+        END AS new_value
+    FROM extracted_parts
+)
+SELECT 
+    id,
+    formula,
+    value,
+    new_value
+FROM calculated_values;
+
+
+
+-- Solution 2: 
+WITH extracted_parts AS (
+    SELECT 
+        id,
+        formula,
+        value,
+        REGEXP_MATCHES(formula, '([0-9]+)[+-]([0-9]+)') AS matches
+    FROM input
+),
+calculated_values AS (
+    SELECT 
+        id,
+        formula,
+        value,
+        (SELECT value FROM input WHERE id = (matches[1])::INT) AS value_1,
+        (SELECT value FROM input WHERE id = (matches[2])::INT) AS value_2,
+        CASE
+            WHEN formula LIKE '%+%' THEN 
+                (SELECT value FROM input WHERE id = (matches[1])::INT) +
+                (SELECT value FROM input WHERE id = (matches[2])::INT)
+            WHEN formula LIKE '%-%' THEN 
+                (SELECT value FROM input WHERE id = (matches[1])::INT) -
+                (SELECT value FROM input WHERE id = (matches[2])::INT)
+        END AS new_value
+    FROM extracted_parts
+)
+SELECT 
+    id,
+    formula,
+    value,
+    new_value
+FROM calculated_values;
+
+
+-- Solution 3: 
+WITH CTE as (
+    SELECT *,
+           SUBSTRING(formula, 1, 1)::int as first_digit,
+           SUBSTRING(formula, 3, 1)::int as second_digit,
+           SUBSTRING(formula, 2, 1) as operator
+    FROM   input
+)
+SELECT   c.id, 
+         c.formula, 
+         c.value,
+         CASE WHEN operator='+' THEN i1.value+i2.value ELSE i1.value-i2.value END as new_value
+FROM     CTE c JOIN input i1 ON c.first_digit=i1.id
+               JOIN input i2 ON c.second_digit=i2.id
+ORDER BY 1
+
+
+-- NOTE: 
+
+-- syntax --> SUBSTRING(string, start_position, length)
+
+-- also for the digits, instead of SUBSTRING, we could have just used LEFT and RIGHT.
+
+"Resource:"
+--https://www.geeksforgeeks.org/postgresql-substring-function/
+--https://www.geeksforgeeks.org/postgresql-regexp_matches-function/

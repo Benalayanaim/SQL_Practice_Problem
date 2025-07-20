@@ -1,0 +1,449 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+#https://chatgpt.com/c/675edac8-c434-8007-83fa-3d6acb520acd
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+
+#Leetcode 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Project%20Employees%202.sql
+
+/**solution 1**/ 
+WITH ProjectEmployeeCounts AS (
+    SELECT 
+        project_id, 
+        COUNT(employee_id) AS employee_count
+    FROM 
+        Project
+    GROUP BY 
+        project_id
+),
+MaxEmployeeCount AS (
+    SELECT 
+        MAX(employee_count) AS max_count
+    FROM 
+        ProjectEmployeeCounts
+)
+SELECT 
+    p.project_id
+FROM 
+    ProjectEmployeeCounts p
+JOIN 
+    MaxEmployeeCount m
+ON 
+    p.employee_count = m.max_count;
+
+
+
+/*Solution 2*/
+-- Solution
+select a.project_id
+from(
+select project_id,
+rank() over(order by count(employee_id) desc) as rk
+from project
+group by project_id) a
+where a.rk = 1
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 2
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Queries%20quality%20and%20percentage.sql
+
+/**solution 1**/     
+
+SELECT
+    query_name,
+    ROUND(AVG(CAST(rating AS DECIMAL) / position), 2) AS quality,
+    ROUND(SUM(CASE WHEN rating < 3 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS poor_query_percentage
+FROM
+    queries
+GROUP BY
+    query_name;
+
+/**solution 2**/     
+SELECT 
+    query_name,
+    ROUND(AVG(rating::numeric / position), 2) AS quality,
+    ROUND(SUM(CASE WHEN rating < 3 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS poor_query_percentage
+FROM Queries
+GROUP BY query_name
+HAVING query_name IS NOT NULL
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+
+
+
+#Leetcode 3
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Reformat%20department%20table.sql
+
+/**solution 1**/ 
+
+SELECT 
+    id,
+    MAX(CASE WHEN month = 'Jan' THEN revenue END) AS Jan_Revenue,
+    MAX(CASE WHEN month = 'Feb' THEN revenue END) AS Feb_Revenue,
+    MAX(CASE WHEN month = 'Mar' THEN revenue END) AS Mar_Revenue,
+    MAX(CASE WHEN month = 'Apr' THEN revenue END) AS Apr_Revenue,
+    MAX(CASE WHEN month = 'May' THEN revenue END) AS May_Revenue,
+    MAX(CASE WHEN month = 'Jun' THEN revenue END) AS Jun_Revenue,
+    MAX(CASE WHEN month = 'Jul' THEN revenue END) AS Jul_Revenue,
+    MAX(CASE WHEN month = 'Aug' THEN revenue END) AS Aug_Revenue,
+    MAX(CASE WHEN month = 'Sep' THEN revenue END) AS Sep_Revenue,
+    MAX(CASE WHEN month = 'Oct' THEN revenue END) AS Oct_Revenue,
+    MAX(CASE WHEN month = 'Nov' THEN revenue END) AS Nov_Revenue,
+    MAX(CASE WHEN month = 'Dec' THEN revenue END) AS Dec_Revenue
+FROM 
+    Department
+GROUP BY 
+    id;
+
+/**solution 2**/ 
+SELECT 
+    id,
+    SUM(CASE WHEN month = 'Jan' THEN revenue ELSE NULL END) AS Jan_Revenue,
+    SUM(CASE WHEN month = 'Feb' THEN revenue ELSE NULL END) AS Feb_Revenue,
+    SUM(CASE WHEN month = 'Mar' THEN revenue ELSE NULL END) AS Mar_Revenue,
+    SUM(CASE WHEN month = 'Apr' THEN revenue ELSE NULL END) AS Apr_Revenue,
+    SUM(CASE WHEN month = 'May' THEN revenue ELSE NULL END) AS May_Revenue,
+    SUM(CASE WHEN month = 'Jun' THEN revenue ELSE NULL END) AS Jun_Revenue,
+    SUM(CASE WHEN month = 'Jul' THEN revenue ELSE NULL END) AS Jul_Revenue,
+    SUM(CASE WHEN month = 'Aug' THEN revenue ELSE NULL END) AS Aug_Revenue,
+    SUM(CASE WHEN month = 'Sep' THEN revenue ELSE NULL END) AS Sep_Revenue,
+    SUM(CASE WHEN month = 'Oct' THEN revenue ELSE NULL END) AS Oct_Revenue,
+    SUM(CASE WHEN month = 'Nov' THEN revenue ELSE NULL END) AS Nov_Revenue,
+    SUM(CASE WHEN month = 'Dec' THEN revenue ELSE NULL END) AS Dec_Revenue
+FROM 
+    Department
+GROUP BY 
+    id;
+
+/**solution 3**/ 
+SELECT
+    id,
+    SUM(revenue) FILTER (WHERE month = 'Jan') AS Jan_Revenue,
+    SUM(revenue) FILTER (WHERE month = 'Feb') AS Feb_Revenue,
+    SUM(revenue) FILTER (WHERE month = 'Mar') AS Mar_Revenue,
+    SUM(revenue) FILTER (WHERE month = 'Apr') AS Apr_Revenue,
+    SUM(revenue) FILTER (WHERE month = 'May') AS May_Revenue,
+    SUM(revenue) FILTER (WHERE month = 'Jun') AS Jun_Revenue,
+    SUM(revenue) FILTER (WHERE month = 'Jul') AS Jul_Revenue,
+    SUM(revenue) FILTER (WHERE month = 'Aug') AS Aug_Revenue,
+    SUM(revenue) FILTER (WHERE month = 'Sep') AS Sep_Revenue,
+    SUM(revenue) FILTER (WHERE month = 'Oct') AS Oct_Revenue,
+    SUM(revenue) FILTER (WHERE month = 'Nov') AS Nov_Revenue,
+    SUM(revenue) FILTER (WHERE month = 'Dec') AS Dec_Revenue
+FROM
+    Department
+GROUP BY
+    id;
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 4
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Replace%20employee%20id%20with%20unique%20identifier.sql
+
+/**solution 1**/ 
+-- Write your PostgreSQL query statement below
+Select
+euni.unique_id,e.name
+from Employees e
+left join EmployeeUNI euni
+on euni.id = e.id;
+
+
+
+
+/**solution 2**/ 
+Select
+euni.unique_id,e.name
+from Employees e
+left join EmployeeUNI euni
+using(id)
+
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/21-google-repeating-words.md
+
+
+---Solution 1
+WITH SplitWords AS (
+    SELECT 
+        LOWER(UNNEST(STRING_TO_ARRAY(content, ' '))) AS word
+    FROM 
+        namaste_python
+),
+WordCounts AS (
+    SELECT 
+        word, 
+        COUNT(*) AS occurrence_count
+    FROM 
+        SplitWords
+    GROUP BY 
+        word
+)
+SELECT 
+    word AS corpus_words, 
+    occurrence_count
+FROM 
+    WordCounts
+WHERE 
+    occurrence_count > 1
+ORDER BY 
+    occurrence_count DESC, 
+    word;
+
+---Solution 2
+SELECT   REGEXP_SPLIT_TO_TABLE(content, ' ') as corpus_words, COUNT(*) as occurence_count
+FROM     namaste_python
+GROUP BY corpus_words
+HAVING   COUNT(*) > 1
+ORDER BY occurence_count DESC
+
+
+--Resource : https://www.sqliz.com/postgresql-ref/regexp_split_to_table/#:~:text=The%20PostgreSQL%20regexp_split_to_table%28%29%20function%20splits%20a%20specified%20string,This%20function%20is%20similar%20to%20the%20string_to_table%28%29%20function.
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 2
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/22-honeywell-print-movie-stars.md
+
+/**solution 1**/ 
+WITH ranked_movies as (
+	SELECT   genre, 
+             title, 
+             AVG(rating) as avg_rating, 
+             ROW_NUMBER() OVER(PARTITION BY genre ORDER BY AVG(rating) desc) as rn
+	FROM     movies m JOIN reviews r ON m.id=r.movie_id
+	GROUP BY 1, 2
+)
+SELECT genre, title, REPEAT('*', ROUND(avg_rating, 0)::int) AS stars
+FROM   ranked_movies
+WHERE  rn=1
+
+
+-- NOTE: learnt about new function: REPEAT resourece:
+---https://neon.tech/postgresql/postgresql-string-functions/postgresql-repeat
+
+
+--Solution 2:
+WITH ranked_movies AS (
+    SELECT 
+        m.genre, 
+        m.title, 
+        AVG(r.rating) AS avg_rating, 
+        ROW_NUMBER() OVER (PARTITION BY m.genre ORDER BY AVG(r.rating) DESC) AS rn
+    FROM 
+        movies m
+    JOIN 
+        reviews r 
+    ON 
+        m.id = r.movie_id
+    GROUP BY 
+        m.genre, m.title
+)
+SELECT 
+    genre, 
+    title, 
+    ROUND(avg_rating, 2) AS avg_rating
+FROM 
+    ranked_movies
+WHERE 
+    rn = 1
+ORDER BY 
+    genre;
+
+
+
+--Solution 3:
+WITH MovieRatings AS (
+    -- Step 1: Calculate the average rating for each movie
+    SELECT 
+        r.movie_id, 
+        AVG(r.rating) AS avg_rating
+    FROM 
+        reviews r
+    GROUP BY 
+        r.movie_id
+),
+MoviesWithRatings AS (
+    -- Step 2: Join the movies table with the calculated average ratings
+    SELECT 
+        m.genre, 
+        m.title, 
+        mr.avg_rating
+    FROM 
+        movies m
+    JOIN 
+        MovieRatings mr 
+    ON 
+        m.id = mr.movie_id
+),
+RankedMovies AS (
+    -- Step 3: Rank movies by average rating within each genre
+    SELECT 
+        genre, 
+        title, 
+        avg_rating, 
+        ROW_NUMBER() OVER (PARTITION BY genre ORDER BY avg_rating DESC, title ASC) AS rn
+    FROM 
+        MoviesWithRatings
+)
+-- Step 4: Select the top-ranked movie in each genre
+SELECT 
+    genre, 
+    title, 
+    ROUND(avg_rating, 2) AS avg_rating
+FROM 
+    RankedMovies
+WHERE 
+    rn = 1
+ORDER BY 
+    genre;
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 3
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/23-ibm-hackerrank-discounted-tours.md
+
+/**solution 1**/ 
+" CASE 1: in case of only MIN_SIZE variable. "
+
+WITH EligibleTours AS (
+    -- Step 1: Join families and countries to find eligible tours
+    SELECT 
+        f.id AS family_id,
+        f.name AS family_name,
+        COUNT(c.id) AS discounted_tours_count
+    FROM 
+        families f
+    JOIN 
+        countries c 
+    ON 
+        f.family_size >= c.min_size
+    GROUP BY 
+        f.id, f.name
+)
+-- Step 2: Find the maximum number of discounted tours any family can access
+SELECT 
+    MAX(discounted_tours_count) AS discounted_tours_count
+FROM 
+    EligibleTours;
+
+
+
+
+-- Solution 2: 
+SELECT 
+    MAX(discounted_tours_count) AS discounted_tours_count
+FROM (
+    SELECT 
+        f.id AS family_id, 
+        COUNT(c.id) AS discounted_tours_count
+    FROM 
+        families f
+    JOIN 
+        countries c
+    ON 
+        f.family_size >= c.min_size
+    GROUP BY 
+        f.id
+) AS family_tour_counts;
+
+
+
+--solution 3: 
+SELECT COUNT(*) AS discounted_tours_count
+FROM   countries
+WHERE  min_size < (
+	SELECT MAX(family_size) 
+	FROM   families
+)
+
+
+"CASE 2: in case of both MIN_SIZE and MAX_SIZE variables."
+
+
+--Solution : 1
+WITH EligibleTours AS (
+    -- Step 1: Find eligible tours for each family based on min_size and max_size
+    SELECT 
+        f.id AS family_id, 
+        f.name AS family_name, 
+        COUNT(c.id) AS discounted_tours_count
+    FROM 
+        families f
+    JOIN 
+        countries c 
+    ON 
+        f.family_size >= c.min_size 
+        AND f.family_size <= c.max_size
+    GROUP BY 
+        f.id, f.name
+),
+MaxDiscountedTours AS (
+    -- Step 2: Find the maximum count of discounted tours
+    SELECT 
+        MAX(discounted_tours_count) AS discounted_tours_count
+    FROM 
+        EligibleTours
+)
+-- Step 3: Return the maximum count
+SELECT 
+    discounted_tours_count
+FROM 
+    MaxDiscountedTours;
+
+
+
+---Solution 2 :
+WITH CTE as (
+	SELECT   f.name as person_name, 
+             family_size, 
+             c.name as country_name, 
+             min_size, 
+             max_size, 
+             COUNT(*) OVER(PARTITION BY f.name) as count
+	FROM     countries c JOIN families f ON f.family_size BETWEEN c.min_size and c.max_size
+	ORDER BY 1
+)
+SELECT MAX(count) as discounted_tours_count
+FROM   CTE

@@ -1,0 +1,435 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+#https://chatgpt.com/c/675d9b87-5d58-8007-a9f1-01d461815628
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+
+#Leetcode 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Not%20Boring%20movies.sql
+
+/**solution 1**/ 
+SELECT * 
+FROM Cinema 
+WHERE 
+    MOD( id, 2) = 1 
+AND 
+    description <> 'boring' 
+
+ORDER BY rating DESC
+
+
+/*Solution 2*/
+select * 
+from 
+    Cinema as c
+where 
+    id % 2 = 1 
+and description
+    !='boring'
+ order by rating desc
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 2
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Number%20of%20comments%20per%20post.sql
+
+/**solution 1**/     
+
+WITH UniquePosts AS (
+    SELECT DISTINCT sub_id AS post_id
+    FROM Submissions
+    WHERE parent_id IS NULL
+),
+UniqueComments AS (
+    SELECT DISTINCT parent_id, sub_id
+    FROM Submissions
+    WHERE parent_id IS NOT NULL
+)
+SELECT 
+    p.post_id,
+    COUNT(DISTINCT c.sub_id) AS number_of_comments
+FROM UniquePosts p
+LEFT JOIN UniqueComments c
+ON p.post_id = c.parent_id
+GROUP BY p.post_id
+ORDER BY p.post_id;
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+
+
+
+#Leetcode 3
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Product%20Sales%20Analysis%201.sql
+
+/**solution 1**/ 
+
+select p.product_name, s.year, s.price
+from Sales as s
+inner join Product as p
+on s.product_id = p.product_id
+
+"""Explanation :
+-->INNER JOIN ensures that only rows with matching product_id in both the Sales and Product tables are included in the result.
+If a product_id exists in the Sales table but not in the Product table, it will be excluded."""
+/**solution 2**/ 
+select p.product_name, s.year, s.price
+from Sales as s
+Left join Product as p
+ON s.product_id = p.product_id ;
+"""Explanation : 
+-->LEFT JOIN includes all rows from the Sales table, even if there is no matching product_id in the Product table.
+If a product_id exists in the Sales table but not in the Product table, the product_name in the result will be NULL."""
+
+---Conclusion
+"When to Use Each
+INNER JOIN is more precise and efficient when you only care about rows with matching relationships.
+LEFT JOIN is useful when you want to include all rows from the Sales table, even if there is no matching row in Product. 
+This could be helpful in scenarios where some product_id values in Sales might not yet exist in Product."
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 4
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Product%20Sales%20Analysis%202.sql
+
+/**solution 1**/ 
+SELECT 
+    a.product_id, 
+    SUM(a.quantity) AS total_quantity
+FROM 
+    sales a
+JOIN 
+    product b
+ON 
+    a.product_id = b.product_id
+GROUP BY 
+    a.product_id;
+
+
+
+
+/**solution 2**/ 
+SELECT 
+    product_id, 
+    SUM(quantity) AS total_quantity_sold
+FROM 
+    Sales
+GROUP BY 
+    product_id;
+
+"Use the JOIN if:
+You want to ensure that product_id exists in both sales and product.
+You plan to include additional columns (e.g., product_name) from the product table in the result.
+Final Recommendation:
+Both approaches work, but choose the simpler version if the JOIN is not required for the current purpose. 
+The JOIN introduces slight overhead and should only be used when necessary."
+
+---mannha a9raa question b semeh 9ball metjewebb
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 5
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Project%20Employees%201.sql
+
+
+-- Solution 1:
+select a.project_id ,
+ round(sum(experience_years)::numeric/count(experience_years),2) as average_years 
+from project a
+join Employee b on a.employee_id  = b.employee_id 
+group by a.project_id
+
+
+
+
+/**solution 2**/ 
+select project_id,round(avg(experience_years)::numeric,2) as average_years
+from Project p
+left join Employee e on e.employee_id=p.employee_id
+Group by project_id order by project_id;
+
+
+
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/17-spring-ct-parent-child-names.md
+
+---Solution 1
+WITH Father AS (
+    -- Select fathers and their respective child IDs
+    SELECT 
+        r.c_id AS child_id,
+        p.name AS father_name
+    FROM relations r
+    JOIN people p
+        ON r.p_id = p.id
+    WHERE p.gender = 'M'
+),
+Mother AS (
+    -- Select mothers and their respective child IDs
+    SELECT 
+        r.c_id AS child_id,
+        p.name AS mother_name
+    FROM relations r
+    JOIN people p
+        ON r.p_id = p.id
+    WHERE p.gender = 'F'
+),
+Child AS (
+    -- Select all children with their names
+    SELECT 
+        p.id AS child_id,
+        p.name AS child_name
+    FROM people p
+)
+-- Combine the CTEs to get the child, father, and mother names
+SELECT 
+    c.child_name AS child,
+    f.father_name AS father,
+    m.mother_name AS mother
+FROM Child c
+JOIN Father f
+    ON c.child_id = f.child_id
+JOIN Mother m
+    ON c.child_id = m.child_id
+ORDER BY c.child_name;
+
+
+---Solution 2
+WITH parents_cte as (
+	SELECT *
+	FROM   people p JOIN relations r ON p.id=r.p_id
+)
+,children_cte as (
+	SELECT *
+	FROM   people p JOIN relations r ON p.id=r.c_id
+)
+SELECT   cc.name as child, 
+	     MAX(pc.name) FILTER(WHERE pc.gender='M') as father,     
+	     MAX(pc.name) FILTER(WHERE pc.gender='F') as mother  
+FROM     parents_cte pc JOIN children_cte cc ON pc.id=cc.p_id 
+GROUP BY child
+ORDER BY child
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 2
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/18-icc-world-cup-points-table.md
+
+/**solution 1**/ 
+WITH all_teams AS (
+    -- Create a list of all teams from team_1 and team_2
+    SELECT team_1 AS team FROM icc_world_cup
+    UNION
+    SELECT team_2 AS team FROM icc_world_cup
+),
+team_stats AS (
+    -- Calculate matches played, wins, and losses
+    SELECT 
+        t.team,
+        COUNT(CASE WHEN t.team IN (team_1, team_2) THEN 1 END) AS matches_played,
+        COUNT(CASE WHEN t.team = winner THEN 1 END) AS wins,
+        COUNT(CASE WHEN t.team IN (team_1, team_2) AND t.team != winner THEN 1 END) AS losses
+    FROM 
+        all_teams t
+    LEFT JOIN 
+        icc_world_cup i
+    ON 
+        t.team IN (i.team_1, i.team_2)
+    GROUP BY 
+        t.team
+)
+SELECT 
+    team,
+    matches_played,
+    wins,
+    losses,
+    (wins * 2) AS points
+FROM 
+    team_stats
+ORDER BY 
+    points DESC, team ASC;
+
+
+/**solution 2**/ 
+WITH all_matches AS (
+        SELECT   team_1 AS team,
+                 COUNT(*) AS matches_played,
+                 SUM(CASE WHEN team_1=winner THEN 1 ELSE 0 END) AS win_flag
+        FROM     icc_world_cup
+        GROUP BY team_1
+        UNION ALL
+        SELECT   team_2 AS team,
+                 COUNT(*) AS matches_played,
+                 SUM(CASE WHEN team_2=winner THEN 1 ELSE 0 END) AS win_flag
+        FROM     icc_world_cup
+        GROUP BY team_2
+)	
+SELECT   team,
+	     SUM(matches_played) AS matches_played,  
+	     SUM(win_flag) AS wins,
+	     SUM(matches_played) - SUM(win_flag) AS losses,
+	     SUM(win_flag)*2 as points
+FROM     all_matches
+GROUP BY team
+ORDER BY points DESC, matches_played
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 3
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/19-tiger-analytics-2-problems.md
+/**solution 1**/ 
+WITH OriginCTE AS (
+    -- Find the origin for each cid
+    SELECT 
+        f1.cid,
+        f1.origin
+    FROM 
+        flights f1
+    LEFT JOIN flights f2
+        ON f1.origin = f2.destination AND f1.cid = f2.cid
+    WHERE f2.destination IS NULL
+),
+DestinationCTE AS (
+    -- Find the final destination for each cid
+    SELECT 
+        f1.cid,
+        f1.destination
+    FROM 
+        flights f1
+    LEFT JOIN flights f2
+        ON f1.destination = f2.origin AND f1.cid = f2.cid
+    WHERE f2.origin IS NULL
+)
+-- Combine the results
+SELECT 
+    o.cid AS city_id,
+    o.origin,
+    d.destination
+FROM 
+    OriginCTE o
+JOIN 
+    DestinationCTE d
+ON 
+    o.cid = d.cid
+ORDER BY 
+    city_id;
+
+
+
+
+-- Solution 2: 
+SELECT o.cid, o.origin, d.destination
+FROM flights o
+JOIN flights d
+ON o.destination = d.origin;
+
+
+
+--solution 3: 
+WITH ranked_flights as (
+    SELECT cid, 
+           origin, 
+           destination, 
+           ROW_NUMBER() OVER(PARTITION BY cid ORDER BY flight_id) AS flight_start,
+           ROW_NUMBER() OVER(PARTITION BY cid ORDER BY flight_id desc) AS flight_end
+    FROM   flights
+)
+SELECT   cid, 
+         MAX(CASE WHEN flight_start = 1 THEN origin END) AS origin, 
+         MAX(CASE WHEN flight_end = 1 THEN destination END) AS destination
+FROM     ranked_flights
+GROUP BY cid
+
+
+"--> Part2 of the Problem"
+
+
+--Solution : 1
+WITH customer_first_order AS (
+    -- Determine the first order date for each customer
+    SELECT 
+        customer,
+        MIN(order_date) AS first_order_date
+    FROM 
+        sales
+    GROUP BY 
+        customer
+),
+monthly_new_customers AS (
+    -- Extract the month and year from the first order date and count new customers
+    SELECT 
+        TO_CHAR(first_order_date, 'Mon-YY') AS month,
+        COUNT(*) AS new_customer_count
+    FROM 
+        customer_first_order
+    GROUP BY 
+        TO_CHAR(first_order_date, 'Mon-YY')
+)
+-- Sort the results by month
+SELECT 
+    month,
+    new_customer_count
+FROM 
+    monthly_new_customers
+ORDER BY 
+    TO_DATE(month, 'Mon-YY');
+
+
+
+---Solution 2 :
+WITH CTE AS (
+    SELECT 
+        order_date, 
+        customer, 
+        ROW_NUMBER() OVER (PARTITION BY customer ORDER BY order_date) AS rn
+    FROM sales
+)
+SELECT 
+    TO_CHAR(order_date, 'Mon-YY') AS month, 
+    COUNT(customer) AS new_customer_count
+FROM CTE
+WHERE rn = 1
+GROUP BY month
+ORDER BY MIN(order_date);
