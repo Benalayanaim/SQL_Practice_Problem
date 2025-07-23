@@ -1,0 +1,216 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+#https://chatgpt.com/c/67616d39-e918-8007-ab47-7b1926fdf3e7
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+
+#Leetcode 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Sales%20Analysis%203.sql
+
+/**solution 1**/ 
+SELECT p.product_id, p.product_name
+FROM Product p
+JOIN Sales s 
+  ON p.product_id = s.product_id
+WHERE s.sale_date BETWEEN '2019-01-01' AND '2019-03-31'
+AND p.product_id NOT IN (
+    SELECT product_id
+    FROM Sales
+    WHERE sale_date < '2019-01-01' OR sale_date > '2019-03-31'
+)
+GROUP BY p.product_id, p.product_name;
+
+
+
+/*Solution 2*/
+SELECT DISTINCT a.product_id, b.product_name 
+FROM Sales a 
+JOIN Product b 
+  ON a.product_id = b.product_id 
+WHERE a.product_id IN (
+    SELECT product_id 
+    FROM Sales 
+    WHERE sale_date >= '2019-01-01' AND sale_date <= '2019-03-31'
+)
+AND a.product_id NOT IN (
+    SELECT product_id 
+    FROM Sales 
+    WHERE sale_date > '2019-03-31' OR sale_date < '2019-01-01'
+);
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 2
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Sales%20Person.sql
+
+
+/**solution 1**/     
+
+SELECT s.name
+FROM SalesPerson s
+WHERE s.sales_id NOT IN (
+    SELECT o.sales_id
+    FROM Orders o
+    JOIN Company c
+    ON o.com_id = c.com_id
+    WHERE c.name = 'RED'
+);
+
+
+/*Solution 2*/
+WITH cte AS (
+    SELECT DISTINCT o.sales_id
+    FROM Orders o
+    JOIN Company c ON o.com_id = c.com_id
+    WHERE c.name = 'RED'
+)
+SELECT s.name
+FROM SalesPerson s
+WHERE s.sales_id NOT IN (SELECT sales_id FROM cte);
+
+
+/*Solution 3:*/
+with temp as (
+select
+    sp.name
+from
+    SalesPerson sp
+    JOIN Orders o on sp.sales_id = o.sales_id
+    JOIN Company c on o.com_id = c.com_id
+where 
+    c.name = 'RED'
+)
+select name from SalesPerson where name not in (select name from temp)
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 3
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Second%20highest%20salary.sql
+
+
+/**solution 1**/ 
+WITH highest_salary AS (
+    SELECT MAX(salary) AS salary
+    FROM Employee
+)
+
+SELECT MAX(salary) AS "SecondHighestSalary" 
+FROM Employee
+WHERE salary < (SELECT salary FROM highest_salary);
+
+
+
+/**solution 2**/ 
+select max(salary) as SecondHighestSalary from Employee 
+where salary < (select max(salary) from Employee);
+
+/*Solution 3*/
+select
+(select distinct Salary 
+from Employee order by salary desc 
+limit 1 offset 1) 
+as SecondHighestSalary;
+
+--Resource : offset adn Limit
+--https://www.w3schools.com/postgresql/postgresql_limit.php
+--https://www.geeksforgeeks.org/postgresql-limit-with-offset-clause/
+
+
+/*Solution 4*/
+SELECT MAX(salary) AS SecondHighestSalary
+FROM (
+    SELECT salary, DENSE_RANK() OVER (ORDER BY salary DESC) AS rank
+    FROM Employee
+) ranked_salaries
+WHERE rank = 2;
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 4
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Shortest%20Distance.sql
+
+/**solution 1**/ 
+SELECT MIN(ABS(p1.x - p2.x)) AS shortest
+FROM point p1
+JOIN point p2 
+  ON p1.x > p2.x;
+
+
+
+
+
+/**solution 2**/ 
+WITH distances AS (
+    SELECT x - LAG(x) OVER (ORDER BY x) AS distance
+    FROM point
+)
+SELECT MIN(distance) AS shortest_distance
+FROM distances
+WHERE distance IS NOT NULL;
+
+
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/25-accenture-case-sensitivity.md
+
+---Solution 1
+WITH CTE as (
+	SELECT *, 
+		   ASCII(email_id) as email_ascii, 
+	       RANK() OVER(PARTITION BY LOWER(email_id) ORDER BY ASCII(email_id) desc) as rank  
+	FROM   employees
+)
+SELECT *
+FROM   CTE
+WHERE  rank=1
+limit 1 
+
+
+---Solution 2
+WITH CTE AS (
+    SELECT employee_id, 
+           employee_name, 
+           email_id, 
+           RANK() OVER (
+               PARTITION BY LOWER(email_id) 
+               ORDER BY email_id DESC
+           ) AS rank
+    FROM employees
+)
+SELECT employee_id, 
+       employee_name, 
+       email_id AS email
+FROM CTE
+WHERE rank = 1
+ORDER BY employee_id;
+
+
+--Collacte:https://www.postgresql.org/docs/current/collation.html

@@ -1,0 +1,266 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+#https://chatgpt.com/c/67601ea3-fb14-8007-bbc6-367a225c1fa4
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+
+#Leetcode 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Reported%20posts.sql
+
+"the scheam for this question:
+
+-- Create ENUM type for action
+CREATE TYPE action_enum AS ENUM('view', 'like', 'reaction', 'comment', 'report', 'share');
+
+-- Create the Actions table
+CREATE TABLE Actions (
+    user_id INT,
+    post_id INT,
+    action_date DATE,
+    action action_enum,
+    extra VARCHAR(255)
+);
+
+-- Insert data into the Actions table
+INSERT INTO Actions (user_id, post_id, action_date, action, extra) VALUES
+(1, 1, '2019-07-01', 'view', NULL),
+(1, 1, '2019-07-01', 'like', NULL),
+(1, 1, '2019-07-01', 'share', NULL),
+(2, 4, '2019-07-04', 'view', NULL),
+(2, 4, '2019-07-04', 'report', 'spam'),
+(3, 4, '2019-07-04', 'view', NULL),
+(3, 4, '2019-07-04', 'report', 'spam'),
+(4, 3, '2019-07-02', 'view', NULL),
+(4, 3, '2019-07-02', 'report', 'spam'),
+(5, 2, '2019-07-04', 'view', NULL),
+(5, 2, '2019-07-04', 'report', 'racism'),
+(5, 5, '2019-07-04', 'view', NULL),
+(5, 5, '2019-07-04', 'report', 'racism');
+"
+
+/**solution 1**/ 
+SELECT 
+    extra AS report_reason, 
+    COUNT(DISTINCT post_id) AS report_count
+FROM 
+    Actions
+WHERE 
+    action = 'report'
+    AND action_date = '2019-07-04'
+GROUP BY 
+    extra
+HAVING 
+    extra IS NOT NULL;
+
+
+
+/*Solution 2*/
+-- Solution
+SELECT 
+    extra AS report_reason, 
+    COUNT(DISTINCT post_id) AS report_count
+FROM 
+    Actions
+WHERE 
+    action_date = '2019-07-05'::DATE - INTERVAL '1 day'
+    AND action = 'report'
+GROUP BY 
+    extra
+order by report_count
+
+--Resource :
+--https://neon.tech/postgresql/postgresql-tutorial/postgresql-enum
+--https://neon.tech/postgresql/postgresql-tutorial/postgresql-interval
+--https://www.postgresql.org/docs/current/functions-datetime.html
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 2
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Rising%20Temperature.sql
+
+/**solution 1**/     
+
+SELECT today.id 
+FROM Weather yesterday
+CROSS JOIN Weather today
+
+WHERE today.recorddate - yesterday.recorddate = 1
+    AND today.temperature > yesterday.temperature 
+;
+
+--Explanation : https://leetcode.com/problems/rising-temperature/solutions/5884157/real-explained-step-by-step-9-50-all-sql50/ + chatGPT
+
+/*Solution 2*/
+-- Write your PostgreSQL query statement below
+SELECT 
+    W1.id
+FROM 
+    Weather W1
+JOIN 
+    Weather W2
+ON 
+    W1.recordDate = W2.recordDate + INTERVAL '1 DAY'
+WHERE 
+    W1.temperature > W2.temperature;
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 3
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Sales%20Analysis%201.sql
+
+/**solution 1**/ 
+WITH SellerSales AS (
+    SELECT 
+        seller_id, 
+        SUM(price) AS total_sales
+    FROM 
+        Sales
+    GROUP BY 
+        seller_id
+),
+MaxSales AS (
+    SELECT 
+        MAX(total_sales) AS max_sales
+    FROM 
+        SellerSales
+)
+SELECT 
+    seller_id
+FROM 
+    SellerSales
+WHERE 
+    total_sales = (SELECT max_sales FROM MaxSales);
+
+
+
+
+/**solution 2**/ 
+SELECT a.seller_id
+FROM (
+    SELECT 
+        seller_id, 
+        RANK() OVER (ORDER BY SUM(price) DESC) AS rk
+    FROM 
+        sales
+    GROUP BY 
+        seller_id
+) a
+WHERE a.rk = 1;
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 4
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Sales%20Analysis%202.sql
+
+/**solution 1**/ 
+-- Write your PostgreSQL query statement below
+SELECT DISTINCT buyer_id
+FROM Sales S
+JOIN Product P ON S.product_id = P.product_id
+WHERE P.product_name = 'S8'
+
+EXCEPT
+
+SELECT DISTINCT buyer_id
+FROM Sales S
+JOIN Product P ON S.product_id = P.product_id
+WHERE P.product_name = 'iPhone';
+
+--Rsource : https://neon.tech/postgresql/postgresql-tutorial/postgresql-except
+
+
+
+/**solution 2**/ 
+SELECT DISTINCT buyer_id
+FROM Sales S
+JOIN Product P ON S.product_id = P.product_id
+WHERE P.product_name = 'S8'
+  AND buyer_id NOT IN (
+      SELECT DISTINCT buyer_id
+      FROM Sales S2
+      JOIN Product P2 ON S2.product_id = P2.product_id
+      WHERE P2.product_name = 'iPhone'
+  );
+
+
+/*Solution 3: like the sol2 but in more detail*/
+Select distinct a.buyer_id
+from sales a join
+product b
+on a.product_id = b.product_id
+where a.buyer_id in
+(Select a.buyer_id from sales a join product b on a.product_id = b.product_id where b.product_name = 'S8') 
+and
+a.buyer_id not in (Select a.buyer_id from sales a join product b on a.product_id = b.product_id where b.product_name = 'iPhone')
+
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/24-angel-one-busiest-route.md
+
+---Solution 1
+SELECT 
+    airline_number, 
+    CONCAT(origin, ' → ', destination) AS busiet_route
+FROM tickets
+WHERE CONCAT(origin, ' → ', destination) IN (
+    SELECT 
+        CONCAT(origin, ' → ', destination) AS route
+    FROM tickets
+    GROUP BY origin, destination
+    HAVING SUM(ticket_count) = (
+        SELECT MAX(total_tickets)
+        FROM (
+            SELECT SUM(ticket_count) AS total_tickets
+            FROM tickets
+            GROUP BY origin, destination
+        ) AS ticket_totals
+    )
+)
+
+limit 1 
+
+
+---Solution 2
+WITH CTE as (
+	SELECT *, CASE WHEN oneway_round='R' THEN 2*ticket_count ELSE ticket_count END as total_ticket_count
+	FROM   tickets
+)
+SELECT   airline_number, CONCAT(origin, ' → ', destination) as busiet_route
+FROM     CTE
+ORDER BY total_ticket_count desc
+LIMIT    1
+
+

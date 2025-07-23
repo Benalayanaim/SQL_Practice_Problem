@@ -1,0 +1,313 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+#https://chatgpt.com/c/6762b05a-f2b8-8007-98c4-bd024548b047
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+
+#Leetcode 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Students%20and%20Examinations.sql
+
+/**solution 1**/ 
+
+SELECT
+    S.student_id
+    ,S.student_name
+    ,SU.subject_name
+    ,COUNT(E.student_id) attended_exams
+FROM Students S
+CROSS JOIN Subjects SU
+LEFT JOIN Examinations E
+    ON S.student_id = E.student_id
+    AND SU.subject_name = E.subject_name
+
+GROUP BY S.student_id, S.student_name, SU.subject_name
+ORDER BY S.student_id, S.student_name, SU.subject_name
+;
+
+"Explanation this appraoch : https://leetcode.com/problems/students-and-examinations/solutions/5874925/real-explained-step-by-step-12-50-all-sql50/"
+/**/
+WITH student_subject AS (
+    SELECT stu.student_id, stu.student_name, sub.subject_name FROM students stu 
+    CROSS JOIN subjects sub 
+    GROUP BY stu.student_id, stu.student_name, sub.subject_name 
+)
+SELECT ss.student_id, ss.student_name, ss.subject_name, 
+COUNT(e.subject_name) AS attended_exams 
+FROM student_subject ss 
+LEFT JOIN examinations e ON ss.student_id = e.student_id AND e.subject_name = ss.subject_name 
+GROUP BY  ss.student_id, ss.student_name, ss.subject_name, e
+
+
+
+/*Solution 2*/
+with subjectlist as (
+    select distinct subject_name 
+    from Subjects
+),
+student_subjects as (
+    select s.student_id, s.student_name, sl.subject_name
+    from Students s, subjectlist sl    -- Cartesian product
+)
+select 
+    ss.student_id,
+    ss.student_name,
+    ss.subject_name,
+    count(e.student_id) as attended_exams
+from student_subjects ss
+LEFT JOIN Examinations e 
+    on e.subject_name = ss.subject_name 
+    and ss.student_id = e.student_id
+group by 
+    ss.student_id,
+    ss.student_name,
+    ss.subject_name
+order by ss.student_id, ss.subject_name
+
+
+/*Solution 3:*/
+
+with pre as (
+select 
+       student_id
+      ,student_name
+      ,subject_name
+    from Students,Subjects
+    group by 1,2,3
+)
+
+select 
+       s.student_id
+      ,s.student_name
+      ,s.subject_name 
+      ,sum(case when e.subject_name is not null then 1 else 0 end) as attended_exams
+from pre s 
+left join Examinations e 
+on s.student_id = e.student_id 
+and s.subject_name = e.subject_name
+group by 1,2,3
+order by 1,3
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 2
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Students%20with%20invalid%20departments.sql
+
+
+/**solution 1**/     
+
+SELECT 
+    s.id,
+    s.name
+FROM 
+    Students s
+LEFT JOIN 
+    Departments d
+ON 
+    s.department_id = d.id
+WHERE 
+    d.id IS NULL;
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 3
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Swap%20Salary.sql
+
+
+/**solution 1**/ 
+UPDATE Salary
+SET sex = CASE
+WHEN sex = 'm' THEN 'f'
+WHEN sex = 'f' THEN 'm'
+END;
+
+"OR resume case when like this"
+UPDATE Salary
+SET sex = CASE
+WHEN sex ='m' THEN 'f'
+ELSE 'm'
+END
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 4
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Easy/Top%20Travellers.sql
+
+/**solution 1**/ 
+-- Write your PostgreSQL query statement below
+
+/**solution 1**/ 
+
+SELECT
+    Users.name,
+    COALESCE(SUM(Rides.distance), 0) travelled_distance
+FROM 
+    Users
+LEFT JOIN 
+    Rides ON Users.id = Rides.user_id
+GROUP BY 
+    Users.id, Users.name
+ORDER BY 
+    travelled_distance DESC, Users.name ASC;
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/ankit-bansal-sql/medium-complex-sql-questions-playlist/26-exl-analytics-max-min-population.md
+---Solution 1
+WITH MaxPopulatedCities AS (
+    SELECT 
+        state,
+        city AS max_city,
+        population AS max_population
+    FROM city_population
+    WHERE (state, population) IN (
+        SELECT 
+            state,
+            MAX(population)
+        FROM city_population
+        GROUP BY state
+    )
+),
+MinPopulatedCities AS (
+    SELECT 
+        state,
+        city AS min_city,
+        population AS min_population
+    FROM city_population
+    WHERE (state, population) IN (
+        SELECT 
+            state,
+            MIN(population)
+        FROM city_population
+        GROUP BY state
+    )
+)
+SELECT 
+    m.state,
+    m.max_city,
+    m.max_population,
+    n.min_city,
+    n.min_population
+FROM MaxPopulatedCities m
+JOIN MinPopulatedCities n
+ON m.state = n.state;
+
+
+
+---Solution 2
+WITH RankedCities AS (
+    SELECT
+        state,
+        city,
+        population,
+        RANK() OVER (PARTITION BY state ORDER BY population DESC) AS rank_max,
+        RANK() OVER (PARTITION BY state ORDER BY population ASC) AS rank_min
+    FROM
+        city_population
+)
+SELECT
+    state,
+    MAX(CASE WHEN rank_max = 1 THEN city END) AS max_city,
+    MAX(CASE WHEN rank_max = 1 THEN population END) AS max_population,
+    MAX(CASE WHEN rank_min = 1 THEN city END) AS min_city,
+    MAX(CASE WHEN rank_min = 1 THEN population END) AS min_population
+FROM
+    RankedCities
+GROUP BY
+    state
+ORDER BY
+    state;
+
+
+
+/*solution3:*/
+WITH ranked_cities as (
+	SELECT *, 
+           RANK() OVER(PARTITION BY state ORDER BY population desc) as max_rn, 
+           RANK() OVER(PARTITION BY state ORDER BY population) as min_rn
+	FROM   city_population
+)
+SELECT   state, 
+         MAX(city) FILTER(WHERE max_rn=1) as max_populated_city, 
+         MAX(city) FILTER(WHERE min_rn=1) as min_populated_city
+FROM     ranked_cities 
+WHERE    max_rn=1 or min_rn=1
+GROUP BY 1
+
+
+
+/*solution4:*/
+WITH ranked_cities AS (
+    SELECT *, 
+           RANK() OVER (PARTITION BY state ORDER BY population DESC) AS max_rn, 
+           RANK() OVER (PARTITION BY state ORDER BY population ASC) AS min_rn
+    FROM city_population
+)
+SELECT 
+    state, 
+    MAX(city) FILTER (WHERE max_rn = 1) AS max_populated_city, 
+    MAX(population) FILTER (WHERE max_rn = 1) AS max_population,
+    MAX(city) FILTER (WHERE min_rn = 1) AS min_populated_city, 
+    MAX(population) FILTER (WHERE min_rn = 1) AS min_population
+FROM 
+    ranked_cities
+WHERE 
+    max_rn = 1 OR min_rn = 1
+GROUP BY 
+    state
+ORDER BY 
+    state;
+
+
+/*solution5:*/
+
+WITH ranked_cities AS (
+    SELECT
+        state,
+        city,
+        population,
+        ROW_NUMBER() OVER (PARTITION BY state ORDER BY population DESC) AS max_row_num,
+        ROW_NUMBER() OVER (PARTITION BY state ORDER BY population ASC) AS min_row_num
+    FROM city_population
+)
+SELECT
+    state,
+    MAX(CASE WHEN max_row_num = 1 THEN city END) AS max_populated_city,
+    MAX(CASE WHEN max_row_num = 1 THEN population END) AS max_population,
+    MAX(CASE WHEN min_row_num = 1 THEN city END) AS min_populated_city,
+    MAX(CASE WHEN min_row_num = 1 THEN population END) AS min_population
+FROM
+    ranked_cities
+WHERE
+    max_row_num = 1 OR min_row_num = 1
+GROUP BY
+    state
+ORDER BY
+    state;
