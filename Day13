@@ -1,0 +1,294 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+#https://chatgpt.com/c/676ac378-1ff0-8007-b37a-52de633e54af
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+"for problem data lemur"
+--https://github.com/faizanxmulla/sql-portfolio/tree/main/datalemur-solutions
+#Leetcode 1
+#https://datalemur.com/questions/sql-histogram-tweets
+
+/**solution 1**/ 
+
+SELECT 
+  tweet_count_per_user AS tweet_bucket, 
+  COUNT(user_id) AS users_num 
+FROM (
+  SELECT 
+    user_id, 
+    COUNT(tweet_id) AS tweet_count_per_user 
+  FROM tweets 
+  WHERE tweet_date BETWEEN '2022-01-01' 
+    AND '2022-12-31'
+  GROUP BY user_id) AS total_tweets 
+GROUP BY tweet_count_per_user;
+
+/**solution 1**/ 
+
+WITH total_tweets AS (
+  SELECT 
+    user_id, 
+    COUNT(tweet_id) AS tweet_count_per_user
+  FROM tweets 
+  WHERE tweet_date BETWEEN '2022-01-01' 
+    AND '2022-12-31' 
+  GROUP BY user_id) 
+  
+SELECT 
+  tweet_count_per_user AS tweet_bucket, 
+  COUNT(user_id) AS users_num 
+FROM total_tweets 
+GROUP BY tweet_count_per_user;
+
+/**solution 1**/ 
+
+with cte as(
+SELECT user_id,COUNT(*) as tweet_bucket FROM tweets
+WHERE EXTRACT(year from tweet_date::DATE)=2022
+GROUP BY user_id)
+
+SELECT tweet_bucket,COUNT(*) as users_num from cte 
+GROUP BY tweet_bucket
+
+"OR"
+with cte as(
+SELECT user_id,COUNT(*) as tweet_bucket FROM tweets
+WHERE EXTRACT(year from tweet_date)=2022
+GROUP BY user_id)
+
+SELECT tweet_bucket,COUNT(*) as users_num from cte 
+GROUP BY tweet_bucket
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 2
+#https://datalemur.com/questions/matching-skills
+
+/**solution 1**/     
+
+SELECT candidate_id 
+FROM candidates
+WHERE skill IN ('PostgreSQL', 'Tableau', 'Python')
+GROUP BY candidate_id
+HAVING COUNT(DISTINCT skill) = 3
+ORDER BY candidate_id ASC;
+
+/**solution 2**/     
+
+SELECT candidate_id FROM candidates WHERE skill = 'Python'
+INTERSECT 
+SELECT candidate_id FROM candidates WHERE skill = 'Tableau'
+INTERSECT  
+SELECT candidate_id FROM candidates WHERE skill = 'PostgreSQL'
+ORDER BY 1;
+
+
+--Resource : 
+--https://www.sqltutorial.org/sql-intersect/
+--https://www.tutorialspoint.com/sql/sql-intersect-clause.htm
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 3
+#https://datalemur.com/questions/sql-page-with-no-likes
+
+
+/**solution 1**/ 
+SELECT page_id
+FROM pages
+EXCEPT
+SELECT page_id
+FROM page_likes;
+
+--Resource : https://datalemur.com/questions/sql-page-with-no-likes
+
+/**solution 2**/ 
+SELECT pages.page_id
+FROM pages
+LEFT OUTER JOIN page_likes AS likes
+  ON pages.page_id = likes.page_id
+WHERE likes.page_id IS NULL;
+
+
+/*Solution 3*/
+SELECT page_id
+FROM pages
+WHERE page_id NOT IN (
+  SELECT page_id
+  FROM page_likes
+  WHERE page_id IS NOT NULL
+);
+
+/*Solution 4*/
+SELECT page_id
+FROM pages
+WHERE NOT EXISTS (
+  SELECT page_id
+  FROM page_likes AS likes
+  WHERE likes.page_id = pages.page_id
+;)
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 4
+#https://datalemur.com/questions/tesla-unfinished-parts
+
+/**solution 1**/ 
+SELECT part, assembly_step
+FROM parts_assembly
+WHERE finish_date IS NULL;  
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://datalemur.com/questions/sql-third-transaction
+---Solution 1
+SELECT 
+  user_id,
+  spend,
+  transaction_date
+FROM (
+  SELECT 
+    user_id, 
+    spend, 
+    transaction_date, 
+    ROW_NUMBER() OVER (
+      PARTITION BY user_id ORDER BY transaction_date) AS row_num
+  FROM transactions) AS trans_num 
+WHERE row_num = 3;
+
+---Solution 2:
+WITH trans_num AS (
+  SELECT 
+    user_id, 
+    spend, 
+    transaction_date, 
+    ROW_NUMBER() OVER (
+      PARTITION BY user_id ORDER BY transaction_date) AS row_num 
+  FROM transactions)
+ 
+SELECT 
+  user_id, 
+  spend, 
+  transaction_date 
+FROM trans_num 
+WHERE row_num = 3;
+
+
+--Solution 3:
+WITH final_table AS 
+(
+  SELECT
+    user_id,
+    spend,
+    transaction_date,
+    RANK() OVER(PARTITION BY user_id ORDER BY transaction_date) AS rnk
+  FROM
+    transactions
+)
+
+SELECT
+  user_id,
+  spend,
+  transaction_date
+FROM 
+  final_table
+WHERE 
+  rnk = 3;
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 2
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/Active%20Businesses.sql
+
+---Solution 1
+WITH event_avg AS (
+    SELECT
+        event_type,
+        AVG(occurences) AS avg_occurences
+    FROM
+        Events
+    GROUP BY
+        event_type
+),
+business_active_events AS (
+    SELECT
+        e.business_id,
+        e.event_type
+    FROM
+        Events e
+    JOIN
+        event_avg ea
+    ON
+        e.event_type = ea.event_type
+    WHERE
+        e.occurences > ea.avg_occurences
+),
+business_counts AS (
+    SELECT
+        business_id,
+        COUNT(event_type) AS active_event_count
+    FROM
+        business_active_events
+    GROUP BY
+        business_id
+)
+SELECT
+    business_id
+FROM
+    business_counts
+WHERE
+    active_event_count > 1;
+
+
+--Solution 2:
+select c.business_id
+from(
+select *
+from events e
+join
+(select event_type as event, round(avg(occurences),2) as average from events group by event_type) b
+on e.event_type = b.event) c
+where c.occurences>c.average
+group by c.business_id
+having count(*) > 1
+
+"optimize:"
+select c.business_id
+from (
+    select *
+    from events e
+    join (
+        select event_type, round(avg(occurences),2) as average 
+        from events 
+        group by event_type
+    ) avg_table
+    on e.event_type = avg_table.event_type
+) c
+where c.occurences > c.average
+group by c.business_id
+having count(*) > 1;
