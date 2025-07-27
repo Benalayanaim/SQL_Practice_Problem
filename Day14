@@ -1,0 +1,425 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+#https://chatgpt.com/c/676c4047-1cd0-8007-bfb9-99f04a93cf76
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+"for problem data lemur"
+--https://github.com/faizanxmulla/sql-portfolio/tree/main/datalemur-solutions
+#Leetcode 1
+#https://datalemur.com/questions/laptop-mobile-viewership
+
+/**solution 1**/ 
+
+SELECT 
+  SUM(CASE WHEN device_type = 'laptop' THEN 1 ELSE 0 END) AS laptop_views, 
+  SUM(CASE WHEN device_type IN ('tablet', 'phone') THEN 1 ELSE 0 END) AS mobile_views 
+FROM viewership;
+
+/**solution 2**/ 
+
+SELECT 
+  COUNT(*) FILTER (WHERE device_type = 'laptop') AS laptop_views,
+  COUNT(*) FILTER (WHERE device_type IN ('tablet', 'phone'))  AS mobile_views 
+FROM viewership;
+
+
+/*Solution 3 */
+SELECT 
+  (SELECT COUNT(device_type) FROM viewership 
+WHERE device_type = 'laptop') AS "laptop_views",
+  (SELECT COUNT(device_type) FROM viewership 
+WHERE device_type IN ('tablet', 'phone')) AS "mobile_views";
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 2
+#https://datalemur.com/questions/sql-average-post-hiatus-1
+
+/**solution 1**/     
+
+SELECT 
+	user_id, 
+    (MAX(post_date::DATE) - MIN(post_date::DATE)) AS days_between
+FROM posts
+WHERE DATE_PART('year', post_date::DATE) = 2021 
+GROUP BY user_id
+HAVING COUNT(post_id)>1;
+
+/**solution 2**/     
+
+select 
+        user_id, 
+        EXTRACT(day from max(post_date)-min(post_date)) 
+from posts
+where EXTRACT(year from post_date) = 2021
+group by user_id
+having min(post_date) != max(post_date);
+
+/*Solution 3*/
+SELECT 
+    user_id ,
+    DATE_PART('day',MAX(post_date) - MIN(post_date)) AS days_between
+FROM posts
+WHERE EXTRACT(YEAR FROM post_date) = 2021
+GROUP BY user_id
+HAVING COUNT(user_id)>1;
+
+--Resource : 
+--https://www.geeksforgeeks.org/postgresql-date_part-function/
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 3
+#https://datalemur.com/questions/teams-power-users
+
+
+/**solution 1**/ 
+SELECT sender_id, COUNT(sender_id)
+FROM messages
+WHERE DATE_PART('month', sent_date) = '08'AND DATE_PART('year', sent_date) = '2022'
+GROUP BY sender_id
+ORDER BY count DESC
+LIMIT 2
+
+
+
+/**solution 2**/ 
+SELECT 
+  sender_id,
+  COUNT(sent_date) AS message_count
+FROM messages
+WHERE sent_date BETWEEN '2022-08-01' AND '2022-08-31'
+GROUP BY sender_id 
+ORDER BY message_count DESC
+LIMIT 2
+
+
+/*Solution 3*/
+WITH my_table AS (
+        
+        SELECT sender_id,COUNT(content) as message_count
+        FROM messages
+        WHERE EXTRACT(MONTH FROM sent_date) = 08 and EXTRACT(YEAR FROM sent_date) = 2022
+        GROUP BY sender_id
+
+)
+SELECT * 
+FROM my_table
+ORDER BY message_count DESC
+LIMIT 2;
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 4
+#https://datalemur.com/questions/duplicate-job-listings
+
+/**solution 1**/ 
+SELECT 
+    COUNT(DISTINCT company_id) AS duplicate_companies
+FROM (
+    SELECT 
+        company_id,
+        title,
+        description
+    FROM job_listings
+    GROUP BY 
+        company_id,
+        title,
+        description
+    HAVING COUNT(job_id) > 1
+) dup;
+
+
+/**solution 2**/ 
+WITH job_count_cte AS (
+  SELECT 
+    company_id, 
+    title, 
+    description, 
+    COUNT(job_id) AS job_count
+  FROM job_listings
+  GROUP BY company_id, title, description
+)
+
+SELECT COUNT(DISTINCT company_id) AS duplicate_companies
+FROM job_count_cte
+WHERE job_count > 1;
+
+/**solution 3**/ 
+SELECT COUNT(DISTINCT jl1.company_id) AS co_w_duplicate_jobs
+FROM job_listings jl1
+INNER JOIN job_listings jl2
+  ON jl1.company_id = jl2.company_id
+    AND jl1.title = jl2.title
+    AND jl1.description = jl2.description
+    AND jl1.job_id <> jl2.job_id;
+
+/**solution 4**/ 
+SELECT COUNT(DISTINCT company_id) AS duplicate_companies
+FROM (
+  SELECT 
+    company_id, 
+    title, 
+    description, 
+    COUNT(job_id) AS job_count
+  FROM job_listings
+  GROUP BY company_id, title, description
+) AS job_count_cte
+WHERE job_count > 1;
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 5
+#https://datalemur.com/questions/completed-trades
+
+/**solution 1**/ 
+select u.city as city, 
+sum(case WHEN t.status = 'Completed' then 1 else 0 end ) as total_oreds
+from trades as t
+inner join users u
+using(user_id)
+group by city
+ORDER by total_oreds DESC
+LIMIT 3
+
+
+/**solution 2**/ 
+SELECT 
+  users.city, 
+  COUNT(trades.status) AS total_orders 
+FROM trades 
+INNER JOIN users 
+  ON trades.user_id = users.user_id 
+WHERE trades.status = 'Completed' 
+GROUP BY users.city 
+ORDER BY total_orders DESC
+LIMIT 3;
+
+'or'
+SELECT 
+  users.city, 
+  COUNT(trades.order_id) AS total_orders 
+FROM trades 
+INNER JOIN users 
+  ON trades.user_id = users.user_id 
+WHERE trades.status = 'Completed' 
+GROUP BY users.city 
+ORDER BY total_orders DESC
+LIMIT 3;
+
+/**solution 3**/ 
+SELECT COUNT(DISTINCT jl1.company_id) AS co_w_duplicate_jobs
+FROM job_listings jl1
+INNER JOIN job_listings jl2
+  ON jl1.company_id = jl2.company_id
+    AND jl1.title = jl2.title
+    AND jl1.description = jl2.description
+    AND jl1.job_id <> jl2.job_id;
+
+/**solution 4**/ 
+SELECT COUNT(DISTINCT company_id) AS duplicate_companies
+FROM (
+  SELECT 
+    company_id, 
+    title, 
+    description, 
+    COUNT(job_id) AS job_count
+  FROM job_listings
+  GROUP BY company_id, title, description
+) AS job_count_cte
+WHERE job_count > 1;
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 6
+#https://datalemur.com/questions/sql-avg-review-ratings
+
+/**solution 1**/ 
+SELECT 
+  EXTRACT(MONTH FROM submit_date) AS mth,
+  product_id,
+  ROUND(AVG(stars), 2) AS avg_stars
+FROM reviews
+GROUP BY 
+  mth, 
+  product_id
+ORDER BY mth, product_id;
+
+/**solution 2**/ 
+SELECT
+    EXTRACT(MONTH FROM submit_date) AS mth,
+    product_id,
+    ROUND(SUM(stars) * 1.0 / COUNT(stars), 2) AS avg_stars
+FROM reviews
+GROUP BY
+    mth,
+    product_id
+ORDER BY
+    mth, 
+    product_id;
+
+
+/**solution 3**/ 
+SELECT 
+  DATE_part('month', submit_date) AS submit_month,
+  product_id,
+  ROUND(AVG(stars), 2)
+FROM 
+  reviews
+GROUP BY
+  product_id, submit_month
+ORDER BY
+  submit_month, product_id
+
+
+
+"Date_trunc what is ?"
+--https://www.codecademy.com/resources/docs/sql/dates/date-trunc
+--https://www.geeksforgeeks.org/postgresql-date_trunc-function/
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/Active%20Users.sql
+
+---Solution 1
+WITH daily_logins AS (
+    SELECT DISTINCT
+        id AS user_id,
+        login_date
+    FROM Logins
+),
+daily_streaks AS (
+    SELECT
+        user_id,
+        login_date,
+        -- Subtract the 1970-01-01 date (in Postgres style)
+        CAST((login_date - DATE '1970-01-01') AS INT)
+        - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date) AS streak_key
+    FROM daily_logins
+),
+streak_counts AS (
+    SELECT
+        user_id,
+        streak_key,
+        COUNT(*) AS consecutive_days
+    FROM daily_streaks
+    GROUP BY
+        user_id,
+        streak_key
+)
+SELECT 
+    A.id,
+    A.name
+FROM Accounts AS A
+JOIN (
+    SELECT 
+        user_id
+    FROM streak_counts
+    WHERE consecutive_days >= 5
+    GROUP BY user_id
+) AS ActiveUsers
+    ON A.id = ActiveUsers.user_id
+ORDER BY A.id;
+
+
+
+--Solution 2:
+WITH daily_logins AS (
+    SELECT DISTINCT
+        id AS user_id,
+        login_date
+    FROM Logins
+),
+daily_streaks AS (
+    SELECT
+        user_id,
+        login_date,
+        -- Convert date to 'days since epoch' (PostgreSQL style: EXTRACT(EPOCH ...)/86400, or use DATEDIFF in other SQL dialects).
+        EXTRACT(EPOCH FROM login_date)::int / 86400 
+          - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date) 
+          AS streak_key
+    FROM daily_logins
+
+),
+streak_counts AS (
+    SELECT
+        user_id,
+        streak_key,
+        COUNT(*) AS consecutive_days
+    FROM daily_streaks
+    GROUP BY
+        user_id,
+        streak_key
+)
+SELECT 
+    A.id,
+    A.name
+FROM Accounts AS A
+JOIN (
+    SELECT 
+        user_id
+    FROM streak_counts
+    WHERE consecutive_days >= 5
+    GROUP BY user_id
+) AS ActiveUsers
+    ON A.id = ActiveUsers.user_id
+ORDER BY A.id;
+
+"EPOCH"
+--https://www.commandprompt.com/education/how-to-calculate-epoch-time-in-postgresql/#:~:text=In%20Postgres%2C%20the%20EPOCH%20time,from%20a%20specific%20DateTime%20value.
+--https://www.postgresql.org/docs/8.1/functions-datetime.html
+
+/*Solution 3*/
+WITH t1 AS (
+    SELECT 
+        id,
+        login_date,
+        LEAD(login_date, 4) OVER (PARTITION BY id ORDER BY login_date) AS date_5
+    FROM (
+        SELECT DISTINCT 
+            id, 
+            login_date 
+        FROM Logins
+    ) b
+)
+
+SELECT DISTINCT a.id, a.name
+FROM t1
+JOIN Accounts a 
+   ON t1.id = a.id
+WHERE date_5 IS NOT NULL
+  -- Directly compare the difference in days
+  AND (date_5 - login_date) = 4
+ORDER BY a.id;
+
+
+

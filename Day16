@@ -1,0 +1,247 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+
+"open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih"
+#https://chatgpt.com/c/676eaf33-f6fc-800f-a571-cc23a376a091
+ 
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+"for problem data lemur"
+--https://github.com/faizanxmulla/sql-portfolio/tree/main/datalemur-solutions
+
+#Leetcode 1
+#https://datalemur.com/questions/non-profitable-drugs
+
+/**solution 1**/ 
+
+SELECT
+  manufacturer,
+  COUNT(drug) AS drug_count,
+  ABS(SUM(total_sales - cogs)) AS total_loss
+FROM pharmacy_sales
+WHERE total_sales - cogs <= 0
+GROUP BY manufacturer
+ORDER BY total_loss DESC;
+
+"cogs mean ==> https://www.google.com/search?q=what+mean+by+cogs&rlz=1C1CHBD_frTN1087TN1087&oq=what+mean+by+cogs+&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIKCAEQABgKGBYYHjIICAIQABgWGB4yCggDEAAYChgWGB4yCggEEAAYChgWGB4yCggFEAAYChgWGB4yCAgGEAAYFhgeMggIBxAAGBYYHjIICAgQABgWGB4yCAgJEAAYFhge0gEINzAwOGowajeoAgCwAgA&sourceid=chrome&ie=UTF-8"
+
+/**solution 2**/ 
+
+SELECT
+  manufacturer,
+  COUNT(drug) AS drug_count, 
+  SUM(cogs - total_sales) AS total_loss
+FROM pharmacy_sales
+WHERE cogs > total_sales
+GROUP BY manufacturer
+ORDER BY total_loss DESC;
+
+
+/*Solution 3*/
+WITH cte AS (
+  SELECT manufacturer, drug, (total_sales-cogs) AS profit
+  FROM pharmacy_sales
+  WHERE (total_sales-cogs) < 0
+)
+SELECT manufacturer, COUNT(drug) AS drug_count, ABS(SUM(profit)) AS total_loss
+FROM cte
+GROUP BY manufacturer
+ORDER BY total_loss DESC;
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 2
+#https://datalemur.com/questions/total-drugs-sales
+
+/**solution 1**/     
+
+SELECT 
+  manufacturer, 
+  CONCAT( '$', ROUND(SUM(total_sales) / 1000000), ' million') AS sales_mil 
+FROM pharmacy_sales 
+GROUP BY manufacturer 
+ORDER BY SUM(total_sales) DESC, manufacturer;
+
+
+/**solution 2**/     
+SELECT 
+  manufacturer, 
+  ('$' || ROUND(sum(total_sales / 1000000)) || ' million') AS sales_mil 
+FROM pharmacy_sales 
+GROUP BY manufacturer 
+ORDER BY SUM(total_sales) DESC, manufacturer;
+
+--Contact :
+--https://www.w3schools.com/sql/func_sqlserver_concat.asp
+
+/****************************************************************************************************************************/
+
+/****************************************************************************************************************************/
+
+#Leetcode 3
+#https://www.youtube.com/watch?v=VaF8oBHTjG8
+#https://datalemur.com/questions/subject-matter-experts
+
+
+/**solution 1**/ 
+SELECT   employee_id
+FROM     employee_expertise
+GROUP BY 1
+HAVING   (COUNT(DISTINCT domain) = 2 AND SUM(years_of_experience) >= 12) OR
+         (COUNT(DISTINCT domain) = 1 AND SUM(years_of_experience) >= 8);
+
+
+/**solution 2**/ 
+SELECT employee_id
+FROM (
+  SELECT 
+    employee_id,
+    COUNT(DISTINCT domain) AS domain_count,
+    SUM(years_of_experience) AS total_experience
+  FROM employee_expertise
+  GROUP BY employee_id
+) subquery
+WHERE (domain_count = 2 AND total_experience >= 12)
+   OR (domain_count = 1 AND total_experience >= 8);
+
+
+/*Solution 3*/
+WITH expertise_summary AS (
+  SELECT 
+    employee_id,
+    COUNT(DISTINCT domain) AS domain_count,
+    SUM(years_of_experience) AS total_experience
+  FROM employee_expertise
+  GROUP BY employee_id
+)
+SELECT employee_id
+FROM expertise_summary
+WHERE (domain_count = 2 AND total_experience >= 12)
+   OR (domain_count = 1 AND total_experience >= 8);
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 4
+#https://www.youtube.com/watch?v=i0obxwb4ivM
+#https://asyncq.com/power-creators-part-1-sql-question-asked-by-linkedin
+
+/**solution 1**/ 
+select pf.profile_id from personal_profiles pf 
+join company_pages cp
+on pf.employer_id = cp.company_id
+where pf.followers > cp.followers
+order by profile_id
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 5
+#https://www.youtube.com/watch?v=mkaEVmL-zAI
+#https://asyncq.com/highest-number-of-products-ebay-asked-sql-question
+
+/**solution 1**/ 
+select user_id, count(product_id) as product_num 
+from user_transactions
+group by user_id
+having sum(spend) >=1000
+order by product_num desc, sum(spend) desc
+limit 3
+
+/**solution 2**/ 
+select user_id,product_num
+from
+(
+select user_id, count(product_id) as product_num, sum(spend) as total_spent
+from 
+user_transactions
+group by user_id
+)t1
+where total_spent >=1000
+order by product_num desc, total_spent desc
+
+/*Solution 3**/
+WITH user_summary AS (
+  SELECT 
+    user_id, 
+    COUNT(product_id) AS product_num, 
+    SUM(spend) AS total_spent
+  FROM user_transactions
+  GROUP BY user_id
+)
+SELECT 
+  user_id, 
+  product_num
+FROM user_summary
+WHERE total_spent >= 1000
+ORDER BY product_num DESC, total_spent DESC;
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 6
+#https://www.youtube.com/watch?v=Q1wo_PUqnYI
+#https://asyncq.com/spare-server-capacity-microsoft-asked-sql-question
+
+/**solution 1**/ 
+WITH total_demand AS (
+  SELECT 
+    datacenter_id, 
+    SUM(monthly_demand) AS total_monthly_demand
+  FROM forecasted_demand
+  GROUP BY datacenter_id
+)
+SELECT 
+  d.datacenter_id,
+  d.monthly_capacity - COALESCE(td.total_monthly_demand, 0) AS spare_capacity
+FROM datacenters d
+LEFT JOIN total_demand td
+ON d.datacenter_id = td.datacenter_id;
+
+/**solution 2**/ 
+WITH space_demand AS (
+    SELECT   datacenter_id, SUM(monthly_demand) AS total_monthly_demand
+    FROM     forecasted_demand
+    GROUP BY 1
+)
+SELECT   dc.datacenter_id,
+         (dc.monthly_capacity - sd.total_monthly_demand) AS spare_capacity
+FROM     datacenters AS dc JOIN space_demand AS sd USING(datacenter_id)
+ORDER BY 1
+
+
+/**solution 3**/ 
+select datacenter_id, (monthly_capacity - sum(monthly_demand)) as spare_capacity 
+from(
+  select f.datacenter_id, f.monthly_demand, d.monthly_capacity
+  from forecasted_demand f join datacenters d 
+  on f.datacenter_id = d.datacenter_id
+) x
+group by datacenter_id, monthly_capacity
+order by datacenter_id
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/

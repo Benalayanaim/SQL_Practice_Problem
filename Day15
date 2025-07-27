@@ -1,0 +1,249 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+
+"open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih"
+#https://chatgpt.com/c/676d553d-9bbc-800f-b9d2-4f081b78116c
+
+ 
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+"for problem data lemur"
+--https://github.com/faizanxmulla/sql-portfolio/tree/main/datalemur-solutions
+
+#Leetcode 1
+#https://github.com/viraj63/SQL/blob/main/Final%20Account%20Balance%20%5BPaypal%20SQL%20Interview%20Question%5D
+#https://www.youtube.com/watch?v=2xXna9OtDBM
+
+/**solution 1**/ 
+
+select 
+    account_id,
+    deposit_amount - withdrawal_amount as final_balance
+from 
+(
+    select account_id,
+    sum(case when transaction_type='Deposit' then amount else 0 end) as deposit_amount,
+    sum(case when transaction_type='Withdrawal' then amount else 0 end) as withdrawal_amount
+    from 
+    transactions
+    group by account_id
+)t;
+
+/**solution 2**/ 
+
+SELECT account_id,
+       Sum(CASE
+             WHEN transaction_type = 'Deposit' THEN amount
+             ELSE -amount
+           END) AS final_balance
+FROM     transactions
+GROUP BY 1;
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 2
+#https://datalemur.com/questions/click-through-rate
+
+/**solution 1**/     
+
+select 
+    app_id ,
+    round((100.0*nb_click/nb_imp),2) as ctr
+
+from(SELECT app_id,
+      sum(CASe WHEN event_type = 'click' then 1 else 0 end) as nb_click ,
+      sum(CASe WHEN event_type = 'impression' then 1 else 0 end) as nb_imp 
+      from events
+      WHERE timestamp BETWEEN '2022-01-01' AND  '2023-01-01'
+      --WHERE DATE_PART('year', timestamp) = 2022
+      --WHERE EXTRACT(year from timestamp::date) = 2022
+      group by app_id) as t
+
+
+/**solution 2**/     
+SELECT
+  app_id,
+  ROUND(100.0 *
+    SUM(CASE WHEN event_type = 'click' THEN 1 ELSE 0 END) /
+    SUM(CASE WHEN event_type = 'impression' THEN 1 ELSE 0 END), 2)  AS ctr_rate
+FROM events
+WHERE timestamp BETWEEN '2022-01-01' AND  '2023-01-01'
+GROUP BY app_id;
+
+/*Solution 3*/
+select app_id ,
+
+SELECT
+  app_id,
+  ROUND(100.0 *
+    COUNT(CASE WHEN event_type = 'click' THEN 1 ELSE NULL END) /
+    COUNT(CASE WHEN event_type = 'impression' THEN 1 ELSE NULL END), 2)  AS ctr_rate
+FROM events
+WHERE timestamp BETWEEN '2022-01-01' AND  '2023-01-01'
+GROUP BY app_id;      
+
+
+/**Solution 4:*/
+SELECT
+  app_id,
+  ROUND(100.0 *
+    SUM(app_id) FILTER (WHERE event_type = 'click') /
+    SUM(app_id) FILTER (WHERE event_type = 'impression'), 2) AS ctr_app
+FROM events
+WHERE timestamp BETWEEN '2022-01-01' AND  '2023-01-01'
+GROUP BY app_id;
+
+'or'
+
+SELECT
+  app_id,
+  ROUND(100.0 *
+    count(app_id) FILTER (WHERE event_type = 'click') /
+    count(app_id) FILTER (WHERE event_type = 'impression'), 2) AS ctr_app
+FROM events
+WHERE timestamp BETWEEN '2022-01-01' AND  '2023-01-01'
+GROUP BY app_id;
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 3
+#https://datalemur.com/questions/second-day-confirmation
+
+
+/**solution 1**/ 
+SELECT DISTINCT user_id--disticnt ky ybdee mefemch pk mais ken fema pk meghir distinct
+FROM emails 
+INNER JOIN texts
+  ON emails.email_id = texts.email_id
+WHERE texts.action_date = emails.signup_date + INTERVAL '1 day'
+  AND texts.signup_action = 'Confirmed';
+
+'Interval'
+--https://neon.tech/postgresql/postgresql-tutorial/postgresql-interval
+
+/**solution 2**/ 
+WITH cte AS (
+SELECT 
+  *,
+  RANK() OVER(PARTITION BY user_id ORDER BY action_date ASC) AS rn
+FROM 
+  emails e JOIN texts t
+  ON e.email_id = t.email_id
+ORDER BY
+  action_date
+)
+SELECT
+  user_id
+FROM
+  cte
+WHERE
+  rn = 2 AND signup_action = 'Confirmed'
+
+
+/*Solution 3*/
+SELECT user_id
+FROM emails e
+JOIN texts t using(email_id)
+where signup_action ='Confirmed'
+and EXTRACT(DAY FROM (action_date - signup_date)) = 1;
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 4
+#https://datalemur.com/questions/cards-issued-difference
+
+/**solution 1**/ 
+SELECT 
+  card_name, 
+  (MAX(issued_amount) - MIN(issued_amount)) AS difference
+FROM monthly_cards_issued
+GROUP BY card_name
+ORDER BY difference DESC;
+
+
+/**solution 2**/ 
+with summary as (
+  select card_name,
+    min(issued_amount) as min_issue_amount,
+    max(issued_amount) as max_issue_amount
+  FROM monthly_cards_issued
+  GROUP BY card_name)
+select 
+  card_name,  
+  (max_issue_amount-min_issue_amount) as difference
+from summary
+order by difference DESC;
+
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 5
+#https://datalemur.com/questions/alibaba-compressed-mean
+
+/**solution 1**/ 
+SELECT 
+    ROUND(SUM(item_count::DECIMAL * order_occurrences)/ SUM(order_occurrences), 1) AS mean
+FROM 
+    items_per_order;
+
+
+
+/**solution 2**/ 
+ 
+SELECT 
+    ROUND(SUM(cast(item_count as DECIMAL) * order_occurrences)/ SUM(order_occurrences), 1) AS mean
+FROM 
+    items_per_order;
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 6
+#https://datalemur.com/questions/top-profitable-drugs
+
+/**solution 1**/ 
+SELECT
+  drug,
+  total_sales - cogs AS total_profit
+FROM pharmacy_sales
+ORDER BY total_profit DESC
+LIMIT 3;
+
+"if there are a dup for the same drug name "
+/**solution 2**/ 
+SELECT drug, SUM(total_sales - cogs) AS total_profit
+FROM pharmacy_sales
+GROUP BY drug
+ORDER BY total_profit DESC
+LIMIT 3;
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
