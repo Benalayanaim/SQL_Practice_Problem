@@ -1,0 +1,210 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+
+"open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih"
+#https://chatgpt.com/c/677027b1-309c-800f-9670-cd255270cda2
+ 
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+"for problem data lemur"
+--https://github.com/faizanxmulla/sql-portfolio/tree/main/datalemur-solutions
+
+#Leetcode 1
+--justu question 1 top rates stars 
+#https://datalemur.com/blog/yelp-sql-interview-questions 
+
+/**solution 1**/ 
+
+SELECT 
+    (SELECT COUNT(*) AS business_count from reviews WHERE review_stars IN(4,5) ) as tt,
+    ROUND(SUM(CASE WHEN review_stars IN (4, 5) THEN 1 ELSE 0 END)*100 / COUNT(*)) AS top_rated_pct
+FROM reviews;
+
+
+
+/**solution 2**/ 
+SELECT Sum(CASE
+             WHEN review_stars IN ( 4, 5 ) THEN 1
+             ELSE 0
+           end) AS
+       business_num,
+       Round(100 *  Sum (CASE
+                            WHEN review_stars IN ( 4, 5 ) THEN 1
+                            ELSE 0
+                          end) / Count(business_id)) AS
+       top_business_pct
+FROM   reviews; 
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 2
+--just question 
+#https://datalemur.com/blog/oracle-sql-interview-questions
+
+/**solution 1**/     
+
+SELECT 
+  deals.employee_id,
+  CASE 
+    WHEN SUM(deals.deal_size) > quotas.quota THEN 'yes' 
+    ELSE 'no' 
+  END AS made_quota
+FROM deals
+INNER JOIN sales_quotas AS quotas
+  USING(employee_id)
+GROUP BY deals.employee_id, quotas.quota
+ORDER BY deals.employee_id;
+
+
+/**solution 2**/     
+"-- Step 1: Calculate the total deal size per employee"
+WITH total_deals AS (
+    SELECT 
+        employee_id,
+        SUM(deal_size) AS total_deal_size
+    FROM deals
+    GROUP BY employee_id
+),
+"-- Step 2: Combine total deal sizes with quotas"
+deals_with_quotas AS (
+    SELECT 
+        td.employee_id,
+        td.total_deal_size,
+        sq.quota
+    FROM total_deals td
+    INNER JOIN sales_quotas sq
+        ON td.employee_id = sq.employee_id
+)
+"-- Step 3: Determine if the quota was met"
+SELECT 
+    employee_id,
+    CASE 
+        WHEN total_deal_size > quota THEN 'yes'
+        ELSE 'no'
+    END AS made_quota
+FROM deals_with_quotas
+ORDER BY employee_id;
+
+
+
+/****************************************************************************************************************************/
+
+/****************************************************************************************************************************/
+
+#Leetcode 3
+"Average Deal Size (Part 1)"
+-- Assume that Salesforce customers pay on a per user basis (also referred to as per seat model).
+
+Given a table of contracts data, write a query to calculate the average annual revenue per Salesforce customer. 
+Round your answer to 2 decimal places.
+
+-- Assume each customer only has 1 contract and the yearly seat cost refers to cost per seat.
+
+Create the schema for the contracts table
+CREATE TABLE contracts (
+    customer_id INTEGER,
+    seats INTEGER,
+    yearly_seat_cost DECIMAL(10, 2)
+);
+
+INSERT INTO contracts (customer_id, seats, yearly_seat_cost) VALUES
+(1, 50, 100.00),
+(2, 30, 120.00),
+(3, 20, 150.00);
+
+
+
+/**solution 1**/ 
+SELECT 
+    ROUND(SUM(seats * yearly_seat_cost)::decimal / COUNT(customer_id), 2) AS average_deal_size
+FROM 
+    contracts;
+"--here the decimal is not obligate because the number is in decimal 
+--but in other case we need to convert to decimal"
+
+/**solution 2**/ 
+SELECT 
+    ROUND(AVG(seats * yearly_seat_cost), 2) AS avg_annual_revenue_per_customer
+FROM 
+    contracts;
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 4
+#https://datalemur.com/questions/frequent-callers
+
+/**solution 1**/ 
+SELECT COUNT(policy_holder_id) AS policy_holder_count
+FROM (
+  SELECT
+    policy_holder_id,
+    COUNT(case_id) AS call_count
+  FROM callers
+  GROUP BY policy_holder_id
+  HAVING COUNT(case_id) >= 3
+) AS call_records;
+
+/*Solution 2*/
+WITH call_records AS (
+  SELECT
+    policy_holder_id,
+    COUNT(case_id) AS call_count
+  FROM callers
+  GROUP BY policy_holder_id
+  HAVING COUNT(case_id) >= 3
+)
+
+SELECT COUNT(policy_holder_id) AS policy_holder_count
+FROM call_records;
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 5
+#https://datalemur.com/blog/apple-sql-interview-questions
+
+/**solution 1**/ 
+SELECT 
+  transactions.store_id, 
+  SUM(payouts.payout_amount) AS total_payout
+FROM trade_in_transactions AS transactions
+INNER JOIN trade_in_payouts AS payouts
+  ON transactions.model_id = payouts.model_id
+GROUP BY transactions.store_id
+ORDER BY total_payout DESC;
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 6
+#https://datalemur.com/blog/intuit-sql-interview-questions
+
+/**solution 1**/ 
+SELECT
+  SUM (CASE WHEN LOWER(product) LIKE 'turbotax%' THEN 1 ELSE 0 END) AS turbotax_total,
+  SUM (CASE WHEN LOWER(product) LIKE 'quickbooks%' THEN 1 ELSE 0 END) AS quickbooks_total
+FROM filed_taxes;
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/

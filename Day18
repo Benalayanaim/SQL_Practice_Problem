@@ -1,0 +1,169 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+
+"open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih : 
+form the chrome naim.benalaya.officiel@gmail.com"
+#https://chatgpt.com/c/6771594b-f84c-8006-8ac1-49e430bc9a0a
+ 
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+"for problem data lemur"
+--https://github.com/faizanxmulla/sql-portfolio/tree/main/datalemur-solutions
+
+#Leetcode 1
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/datalemur-solutions/1%20-%20Easy/32-most-expensive-purchase.sql
+
+/**solution 1**/ 
+
+SELECT 
+    customer_id,
+    MAX(purchase_amount) AS purchase_amount
+FROM 
+    transactions
+GROUP BY 
+    customer_id
+ORDER BY 
+    purchase_amount DESC;
+
+
+
+
+/**solution 2**/ 
+WITH MaxPurchases AS (
+    SELECT 
+        customer_id,
+        purchase_amount,
+        ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY purchase_amount DESC) AS rn
+    FROM 
+        transactions
+)
+SELECT 
+    customer_id,
+    purchase_amount
+FROM 
+    MaxPurchases
+WHERE 
+    rn = 1
+ORDER BY 
+    purchase_amount DESC;
+
+
+/*Solution 3*/
+WITH MaxPurchases AS (
+    SELECT 
+        customer_id,
+        purchase_amount,
+        RANK() OVER (PARTITION BY customer_id ORDER BY purchase_amount DESC) AS rnk
+    FROM 
+        transactions
+)
+SELECT 
+    customer_id,
+    purchase_amount
+FROM 
+    MaxPurchases
+WHERE 
+    rnk = 1
+ORDER BY 
+    purchase_amount DESC;
+
+
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 2
+--just question 
+#https://datalemur.com/blog/sql-window-functions-interview-questions
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/datalemur-solutions/1%20-%20Easy/33-product-line-revenue.sql
+
+/**solution 1**/     
+
+SELECT   p.product_line, SUM(t.amount) as total_revenue
+FROM     product_info as p 
+left JOIN transactions as t 
+USING(product_id)
+GROUP BY 1  
+ORDER BY 2 DESC
+
+/**solution 2**/     
+SELECT
+  DISTINCT p.product_line,
+  SUM(t.amount) OVER (PARTITION BY p.product_line) AS total_revenue
+FROM transactions as t
+INNER JOIN product_info AS p
+  ON t.product_id = p.product_id
+ORDER BY total_revenue DESC;
+
+
+
+/****************************************************************************************************************************/
+
+/****************************************************************************************************************************/
+
+#Leetcode 3
+#https://github.com/faizanxmulla/sql-portfolio/blob/main/datalemur-solutions/1%20-%20Easy/34-webinar-popularity.sql
+
+
+
+/**solution 1**/ 
+SELECT 
+    ROUND(
+        (COUNT(CASE WHEN event_type = 'webinar' THEN 1 END) * 100.0) / 
+        COUNT(*), 
+        0
+    ) AS webinar_pct
+FROM marketing_touches
+WHERE event_date BETWEEN '2022-04-01' AND '2022-04-30';
+
+/*Soluiton 2*/
+WITH CTE AS (
+    SELECT SUM(CASE WHEN event_type = 'webinar' THEN 1 ELSE 0 END) AS webinar_events,
+           COUNT(event_id) AS total_touch_points
+    FROM   marketing_touches
+    WHERE  event_date BETWEEN '04/01/2022' AND '04/30/2022'
+)
+SELECT ROUND(100.0 * webinar_events / total_touch_points) AS webinar_pct
+FROM   CTE
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/
+
+#Leetcode 4
+#https://datalemur.com/questions/sql-well-paid-employees
+
+/**solution 1**/ 
+SELECT 
+  emp.employee_id AS employee_id,
+  emp.name AS employee_name
+FROM employee AS mgr
+INNER JOIN employee AS emp
+  ON mgr.employee_id = emp.manager_id
+WHERE emp.salary > mgr.salary;
+"see here in inner we start by the mg and see the row common betwenn mg and emp then we see the greater salary
+in the case left we start by the emp and we do left to see just the row from emp the salary is greater then the salaey mg"
+/*Solution 2*/
+SELECT
+  emp.employee_id
+  ,emp.name
+
+FROM employee emp
+LEFT JOIN employee mang
+on emp.manager_id = mang.employee_id
+WHERE emp.salary > mang.salary
+;
+
+
+/****************************************************************************************************************************/
+
+
+/****************************************************************************************************************************/

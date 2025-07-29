@@ -1,0 +1,69 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+
+"open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih "
+
+#https://chatgpt.com/c/67731e72-f3d8-800f-abeb-7ee109b9db28
+ 
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/Activity%20Participants.sql
+
+
+/**solution 1**/ 
+
+WITH ActivityCount AS (
+    SELECT activity, COUNT(DISTINCT id) AS participant_count
+    FROM Friends
+    GROUP BY activity
+),
+MinMaxCounts AS (
+    SELECT MIN(participant_count) AS min_count, MAX(participant_count) AS max_count
+    FROM ActivityCount
+)
+SELECT ac.activity
+FROM ActivityCount ac
+JOIN MinMaxCounts mm 
+ON ac.participant_count 
+NOT IN (mm.min_count, mm.max_count);
+
+
+/*Solution 2*/
+WITH activity_counts AS (
+    SELECT 
+        activity,
+        COUNT(DISTINCT id) AS participant_count
+    FROM 
+        Friends
+    GROUP BY 
+        activity
+),
+min_max_counts AS (
+    SELECT 
+        MAX(participant_count) AS max_count,
+        MIN(participant_count) AS min_count
+    FROM 
+        activity_counts
+)
+SELECT 
+    activity
+FROM 
+    activity_counts
+WHERE 
+    participant_count NOT IN (
+        (SELECT max_count FROM min_max_counts),"these subquery because we get the activity from the temp 
+                                                table activity_counts. And the condition from the table min_max_counts 
+                                                So this why in the where we can't do directly the filter by max and min"
+        (SELECT min_count FROM min_max_counts)
+    );
+
+
+/*Solution 3*/
+
+"==> https://www.youtube.com/watch?v=dgBqVE9CtbI&t=46s"
