@@ -1,0 +1,92 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+
+"open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih 
+min chrome Naim.benalaya.officiel@gmail.com"
+
+#https://chatgpt.com/c/6775cb31-ce04-8006-a72d-3f3380218d1c
+ 
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/All%20people%20report%20to%20the%20given%20manager.sql
+
+/**solution 1**/ 
+
+WITH RECURSIVE ReportsToHead AS (
+    -- Base case: Select employees who directly report to the head (employee_id = 1)
+    SELECT employee_id, manager_id
+    FROM Employees
+    WHERE manager_id = 1
+
+    UNION
+
+    -- Recursive case: Find employees who report to the employees already in the CTE
+    SELECT e.employee_id, e.manager_id
+    FROM Employees e
+    INNER JOIN ReportsToHead rth
+    ON e.manager_id = rth.employee_id
+)
+-- Select the distinct employee_id values from the CTE, excluding the head of the company
+SELECT DISTINCT employee_id
+FROM ReportsToHead
+WHERE employee_id != 1;
+
+
+
+
+/*Solution 2*/
+SELECT employee_id
+FROM employees
+WHERE manager_id = 1 AND employee_id != 1
+
+UNION
+
+SELECT employee_id
+FROM employees
+WHERE manager_id = ANY (
+    SELECT employee_id
+    FROM employees
+    WHERE manager_id = 1 AND employee_id != 1
+)
+
+UNION
+
+SELECT employee_id
+FROM employees
+WHERE manager_id = ANY (
+    SELECT employee_id
+    FROM employees
+    WHERE manager_id = ANY (
+        SELECT employee_id
+        FROM employees
+                WHERE manager_id = 1 AND employee_id != 1
+    )
+);
+
+/*Any*/
+"Resource : https://www.geeksforgeeks.org/postgresql-any-operator/"
+
+/*Solution 3*/
+
+SELECT a.employee_id
+FROM Employees a
+JOIN Employees b
+    ON a.manager_id = b.employee_id
+JOIN Employees c
+    ON b.manager_id = c.employee_id
+WHERE c.manager_id = 1 AND a.employee_id != 1;
+
+/*watch the video to understand the approach */    
+"==> https://www.youtube.com/watch?v=IFGSqmA2_h8 " 
+
+/*if you want to understand more the approach*/
+ "open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih
+ min chrome ==> Naimbenalaya10@gmail.com"
+/*: https://chatgpt.com/c/6775cbd7-b13c-800f-9e8c-a090454b33ac*/
+

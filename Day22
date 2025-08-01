@@ -1,0 +1,120 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+
+"open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih"
+
+#https://chatgpt.com/c/677c2c13-40a4-800f-81c2-785b7fbb00d7
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/Calculate%20Salaries.sql
+#https://doocs.github.io/leetcode/en/lc/1468/#description
+
+/**solution 1**/ 
+
+WITH CompanyMaxSalaries AS (
+    SELECT 
+        company_id, 
+        MAX(salary) AS max_salary
+    FROM 
+        Salaries
+    GROUP BY 
+        company_id
+),
+TaxRates AS (
+    SELECT 
+        company_id,
+        CASE
+            WHEN max_salary < 1000 THEN 0
+            WHEN max_salary BETWEEN 1000 AND 10000 THEN 24
+            ELSE 49
+        END AS tax_rate
+    FROM 
+        CompanyMaxSalaries
+)
+SELECT 
+    s.company_id,
+    s.employee_id,
+    s.employee_name,
+    ROUND(s.salary * (1 - t.tax_rate / 100.0)) AS salary
+FROM 
+    Salaries s
+JOIN 
+    TaxRates t
+ON 
+    s.company_id = t.company_id;
+
+
+
+
+/*Solution 2*/
+with t1 as (
+    select 
+        company_id, 
+        employee_id, 
+        employee_name, 
+        salary as sa, 
+        max(salary) over (partition by company_id) as maximum
+    from salaries
+)
+select 
+    company_id, 
+    employee_id, 
+    employee_name,
+    case 
+        when t1.maximum < 1000 then t1.sa
+        when t1.maximum between 1000 and 10000 then round(t1.sa * 0.76, 0)
+        else round(t1.sa * 0.51, 0)
+    end as salary
+from t1
+
+
+----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
+
+#Problem 2
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/Capital%20Gain.sql
+#https://www.youtube.com/watch?v=6MPhclkUmUk
+
+/**solution 1**/
+
+WITH paired_operations AS (
+    SELECT
+        stock_name,
+        SUM(
+            CASE
+                WHEN operation = 'Sell' THEN price
+                WHEN operation = 'Buy' THEN -price
+                ELSE 0
+            END
+        ) AS capital_gain_loss
+    FROM Stocks
+    GROUP BY stock_name
+)
+SELECT stock_name, capital_gain_loss
+FROM paired_operations;
+
+
+
+
+/*Solution 2*/
+SELECT stock_name, (one - two) AS capital_gain_loss
+FROM (
+    (SELECT stock_name, SUM(price) AS one
+     FROM stocks
+     WHERE operation = 'Sell'
+     GROUP BY stock_name) b
+    LEFT JOIN
+    (SELECT stock_name AS name, SUM(price) AS two
+     FROM stocks
+     WHERE operation = 'Buy'
+     GROUP BY stock_name) c
+    ON b.stock_name = c.name
+) 
+ORDER BY capital_gain_loss DESC;

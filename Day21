@@ -1,0 +1,76 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+
+"open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih"
+
+#https://chatgpt.com/c/677ade30-e008-800f-a8ba-1e6d2af966cb
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/Apples%20%26%20Oranges.sql
+#https://www.youtube.com/watch?v=AZByBhTnyv8
+/**solution 1**/ 
+
+SELECT 
+    sale_date,
+    SUM(CASE WHEN fruit = 'apples' THEN sold_num ELSE 0 END) -
+    SUM(CASE WHEN fruit = 'oranges' THEN sold_num ELSE 0 END) AS diff
+FROM Sales
+GROUP BY sale_date
+ORDER BY sale_date;
+
+
+
+
+/*Solution 2*/
+with apple as (
+	select * 
+  	from Sales 
+  	where fruit='apples'
+	),
+    orange as(  
+	select * 
+    from Sales
+    where fruit='oranges'
+)
+select ap.sale_date, (ap.sold_num - ora.sold_num) as diff
+from apple as ap
+Inner join orange as ora
+using(sale_date)
+
+/*Solution 3*/
+Select apples.sale_date, (sold_apples-sold_orange) as diff
+from 
+(
+  (select sale_date , fruit, sold_num as sold_apples
+   from sales
+   where fruit = 'apples') apples
+INNER join 
+ (select sale_date , fruit, sold_num as sold_orange
+  from sales
+  where fruit = 'oranges') oranges
+ 
+on apples.sale_date = oranges.sale_date) 
+
+
+----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
+
+#Problem 2
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/Article%20Views%202.sql
+#https://www.youtube.com/watch?v=CeU6OL1vHeI
+
+/**solution 1**/
+
+SELECT DISTINCT viewer_id AS id
+FROM Views
+WHERE viewer_id IS NOT NULL
+GROUP BY viewer_id, view_date
+HAVING COUNT(DISTINCT article_id) > 1
+ORDER BY id;
