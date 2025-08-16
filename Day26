@@ -1,0 +1,89 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+
+"""open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih
+from chrome Naim.benalaya.officile@gmail.com"""
+#https://chatgpt.com/c/6782e478-73dc-8006-a597-e2fbbb725239
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/Evaluate%20Boolean%20Expressions.sql
+#https://leetcode.ca/2019-11-09-1440-Evaluate-Boolean-Expression/
+
+/**solution 1**/ 
+SELECT
+    e.left_operand,
+    e.operator,
+    e.right_operand,
+    CASE
+        WHEN e.operator = '>' THEN
+            CASE
+                WHEN v1.value > v2.value THEN 'true'
+                ELSE 'false'
+            END
+        WHEN e.operator = '<' THEN
+            CASE
+                WHEN v1.value < v2.value THEN 'true'
+                ELSE 'false'
+            END
+        WHEN e.operator = '=' THEN
+            CASE
+                WHEN v1.value = v2.value THEN 'true'
+                ELSE 'false'
+            END
+        ELSE 'Invalid operator'
+    END AS value
+FROM
+    Expressions e
+    JOIN Variables v1 ON e.left_operand = v1.name
+    JOIN Variables v2 ON e.right_operand = v2.name;
+
+
+
+
+/*Solution 2*/
+
+SELECT
+    left_operand,
+    operator,
+    right_operand,
+    CASE
+        WHEN (
+            (operator = '=' AND v1.value = v2.value)
+            OR (operator = '>' AND v1.value > v2.value)
+            OR (operator = '<' AND v1.value < v2.value)
+        ) THEN 'true'
+        ELSE 'false'
+    END AS value
+FROM
+    Expressions AS e
+    JOIN Variables AS v1 ON e.left_operand = v1.name
+    JOIN Variables AS v2 ON e.right_operand = v2.name;
+
+
+/*Solution 3*/
+SELECT Expressions.*,
+  (
+    CASE
+      WHEN Expressions.operator = '<'
+      AND LeftOperand.value < RightOperand.value THEN 'true'
+      WHEN Expressions.operator = '>'
+      AND LeftOperand.value > RightOperand.value THEN 'true'
+      WHEN Expressions.operator = '='
+      AND LeftOperand.value = RightOperand.value THEN 'true'
+      ELSE 'false'
+    END
+  ) AS value
+FROM Expressions
+INNER JOIN VARIABLES AS LeftOperand
+  ON (Expressions.left_operand = LeftOperand.name)
+INNER JOIN VARIABLES AS RightOperand
+  ON (Expressions.right_operand = RightOperand.name);
+
+

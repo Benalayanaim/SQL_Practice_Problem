@@ -1,0 +1,151 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+
+"""open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih
+from chrome Naim.benalaya.officile@gmail.com"""
+#https://chatgpt.com/c/67817f23-7b6c-8006-bbfd-e872a32a4882
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/Customers%20who%20bought%20all%20products.sql
+#https://leetcode.com/problems/customers-who-bought-all-products/
+
+/**solution 1**/ 
+WITH ProductCount AS (
+    SELECT COUNT(*) AS total_products
+    FROM Product
+),
+CustomerProductCount AS (
+    SELECT 
+        customer_id,
+        COUNT(DISTINCT product_key) AS purchased_products
+    FROM Customer
+    GROUP BY customer_id
+)
+SELECT 
+    cpc.customer_id
+FROM 
+    CustomerProductCount cpc
+JOIN 
+    ProductCount pc
+ON 
+    cpc.purchased_products = pc.total_products;
+
+
+
+
+/*Solution 2*/
+
+
+
+SELECT customer_id FROM Customer
+GROUP BY customer_id 
+HAVING COUNT(DISTINCT(product_key)) = (SELECT COUNT(product_key) FROM Product)
+
+/*Solution 3*/
+-- Write your PostgreSQL query statement below
+WITH customers AS (SELECT customer_id, COUNT(DISTINCT product_key) as counter 
+FROM Customer
+GROUP BY customer_id)
+
+SELECT customer_id
+FROM customers
+WHERE counter = (SELECT COUNT(DISTINCT product_key)
+FROM Product)
+
+
+
+----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
+
+#Problem 2
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/Department%20Highest%20Salary.sql
+#https://leetcode.com/problems/department-highest-salary/
+
+/**solution 1**/
+WITH MaxSalaryByDept AS (
+    SELECT 
+        departmentId,
+        MAX(salary) AS max_salary
+    FROM Employee
+    GROUP BY departmentId
+)
+SELECT 
+    d.name AS Department,
+    e.name AS Employee,
+    e.salary AS Salary
+FROM 
+    Employee e
+JOIN 
+    MaxSalaryByDept m
+ON 
+    e.departmentId = m.departmentId AND e.salary = m.max_salary
+JOIN 
+    Department d
+ON 
+    e.departmentId = d.id;
+
+
+/**solution 2**/
+
+WITH cte AS (
+    SELECT e.name,
+           e.salary,
+           e.departmentId,
+           dense_rank() over (PARTITION BY e.departmentId ORDER BY e.salary DESC) as r
+    FROM Employee e
+)
+SELECT
+    d.name AS Department,
+    c.name AS Employee,
+    c.salary AS salary
+FROM cte c
+INNER JOIN Department d on c.departmentId = d.id
+WHERE c.r = 1;
+
+
+/*Solution 3*/
+WITH RankedSalaries as (
+    SELECT e.Name AS Employee,
+        d.Name AS Department,
+        e.Salary,
+        RANK() OVER (PARTITION BY e.DepartmentId ORDER BY e.Salary DESC) AS rank
+    FROM
+        Employee e
+    JOIN
+        Department d
+    ON
+        e.DepartmentId = d.Id
+)
+SELECT
+    Employee,
+    Department,
+    Salary
+FROM
+    RankedSalaries
+WHERE
+    rank = 1;
+
+/*Solution 4*/
+
+select 
+    Department,
+    Employee,
+    Salary
+from (
+    select 
+        d.name as Department,
+        e.name as Employee,
+        e.salary as Salary,
+        max(e.salary) over(partition by d.name)
+    from Employee e
+    left join Department d
+        on e.departmentId = d.id
+)
+where salary = max

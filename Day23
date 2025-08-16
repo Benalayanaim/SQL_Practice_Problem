@@ -1,0 +1,75 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+
+"open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih"
+
+#https://chatgpt.com/c/677d8209-f5bc-800f-acef-bd1b6c0342c8
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/Consecutive%20Numbers.sql
+#https://leetcode.com/problems/consecutive-numbers/description/
+
+/**solution 1**/ 
+
+SELECT DISTINCT num AS ConsecutiveNums
+FROM (
+    SELECT 
+        num, 
+        LEAD(num) OVER (ORDER BY id) AS next_num,
+        LAG(num) OVER (ORDER BY id) AS prev_num
+    FROM Logs
+) sub
+WHERE num = next_num AND num = prev_num;
+
+
+
+
+/*Solution 2*/
+
+SELECT DISTINCT(l.num) ConsecutiveNums
+FROM Logs l
+LEFT JOIN Logs l2 ON l.id = l2.id+1
+LEFT JOIN Logs l3 ON l.id = l3.id+2
+WHERE l.num = l2.num AND l2.num = l3.num
+
+/*Solution 3*/
+select distinct num as ConsecutiveNums
+from (select num
+      ,lead(num,1) over(order by id) as num1
+      ,lead(num,2) over(order by id) as num2
+from logs
+) 
+where num=num1 and num=num2
+
+
+----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
+
+#Problem 2
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/Count%20student%20number%20in%20departments.sql
+
+/**solution 1**/
+
+SELECT 
+    d.dept_name, 
+    COUNT(s.student_id) AS student_number
+FROM 
+    department d
+LEFT JOIN 
+    student s
+ON 
+    d.dept_id = s.dept_id
+GROUP BY 
+    d.dept_name
+ORDER BY 
+    student_number DESC, 
+    d.dept_name;
+
+

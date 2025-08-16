@@ -1,0 +1,200 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+
+"""open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih
+from chrome Naim.benalaya.officile@gmail.com"""
+#https://chatgpt.com/c/677ee19f-f000-8006-8947-996ec176f48b
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/Countries%20you%20can%20safely%20invest%20in.sql
+#https://www.youtube.com/watch?v=gpGVKBcF8lU
+
+/**solution 1**/ 
+
+WITH CountryCallDetails AS (
+    SELECT 
+        co.name AS country,
+        p.id AS person_id,
+        c.duration
+    FROM 
+        Calls c
+    JOIN 
+        Person p1 ON c.caller_id = p1.id
+    JOIN 
+        Country co ON SUBSTRING(p1.phone_number, 1, 3) = co.country_code
+    UNION ALL
+    SELECT 
+        co.name AS country,
+        p.id AS person_id,
+        c.duration
+    FROM 
+        Calls c
+    JOIN 
+        Person p2 ON c.callee_id = p2.id
+    JOIN 
+        Country co ON SUBSTRING(p2.phone_number, 1, 3) = co.country_code
+),
+GlobalAverage AS (
+    SELECT 
+        AVG(duration) AS global_avg
+    FROM 
+        Calls
+),
+CountryAverage AS (
+    SELECT 
+        country,
+        AVG(duration) AS country_avg
+    FROM 
+        CountryCallDetails
+    GROUP BY 
+        country
+)
+SELECT 
+    ca.country
+FROM 
+    CountryAverage ca
+JOIN 
+    GlobalAverage ga
+ON 
+    ca.country_avg > ga.global_avg;
+
+
+
+
+/*Solution 2*/
+
+
+with t1 as(
+select caller_id as id, duration as total
+from
+(select caller_id, duration
+from calls
+union all
+select callee_id, duration
+from calls) a
+)
+select name as country
+from
+(select distinct avg(total) over(partition by code) as avg_call, avg(total) over() as global_avg, c.name
+from
+((select *, coalesce(total,0) as duration, substring(phone_number from 1 for 3) as code
+from person right join t1
+using (id)) b
+join country c
+on c.country_code = b.code)) d
+where avg_call > global_avg
+
+
+/*Solution 3*/
+SELECT 
+    Country.name AS 'country' 
+FROM 
+    Person 
+JOIN 
+    Calls 
+ON 
+    Person.id = Calls.caller_id OR Person.id = Calls.callee_id
+JOIN 
+    Country 
+ON 
+    LEFT(Person.phone_number, 3) = Country.country_code
+GROUP BY 
+    Country.name
+HAVING 
+    AVG(duration) > (SELECT AVG(duration) AS worldwide_average FROM Calls)
+
+
+----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
+
+#Problem 2
+#https://github.com/nehanawar025/leetcode-1/blob/main/solution/1300-1399/1398.Customers%20Who%20Bought%20Products%20A%20and%20B%20but%20Not%20C/README_EN.md
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/Customers%20who%20bought%20a%2C%20b%20but%20not%20c.sql
+
+/**solution 1**/
+SELECT DISTINCT 
+    c.customer_id, 
+    c.customer_name
+FROM 
+    Customers c
+JOIN 
+    Orders o1 ON c.customer_id = o1.customer_id AND o1.product_name = 'A'
+JOIN 
+    Orders o2 ON c.customer_id = o2.customer_id AND o2.product_name = 'B'
+LEFT JOIN 
+    Orders o3 ON c.customer_id = o3.customer_id AND o3.product_name = 'C'
+WHERE 
+    C.customer_id IS NULL
+ORDER BY 
+    c.customer_id;
+
+
+/**solution 2**/
+
+with t1 as
+(
+select customer_id
+from orders
+where product_name = 'B' and
+customer_id in (select customer_id
+from orders
+where product_name = 'A'))
+
+Select t1.customer_id, c.customer_name
+from t1 join customers c
+on t1.customer_id = c.customer_id
+where t1.customer_id != all(select customer_id
+from orders
+where product_name = 'C')
+
+/**solution 3**/
+SELECT customer_id, customer_name
+FROM Customers
+LEFT JOIN Orders USING (customer_id)
+GROUP BY customer_id, customer_name
+HAVING 
+    SUM(CASE WHEN product_name = 'A' THEN 1 ELSE 0 END) > 0 AND
+    SUM(CASE WHEN product_name = 'B' THEN 1 ELSE 0 END) > 0 AND
+    SUM(CASE WHEN product_name = 'C' THEN 1 ELSE 0 END) = 0
+ORDER BY customer_id;
+
+
+/*Solution 4*/
+SELECT DISTINCT customer_id, customer_name
+FROM Customers
+WHERE customer_id IN
+(
+    SELECT customer_id
+    FROM Orders
+    WHERE product_name = 'A'
+)
+AND customer_id IN
+(
+    SELECT customer_id
+    FROM Orders
+    WHERE product_name = 'B'
+)
+AND customer_id NOT IN
+(
+    SELECT customer_id
+    FROM Orders
+    WHERE product_name = 'C'
+)
+
+/*Solution 5*/
+SELECT 
+    o.customer_id, 
+    (SELECT customer_name FROM Customers WHERE customer_id = o.customer_id) AS customer_name
+FROM Orders o
+GROUP BY o.customer_id
+HAVING 
+    SUM(CASE WHEN o.product_name = 'A' THEN 1 ELSE 0 END) > 0
+    AND SUM(CASE WHEN o.product_name = 'B' THEN 1 ELSE 0 END) > 0
+    AND SUM(CASE WHEN o.product_name = 'C' THEN 1 ELSE 0 END) = 0;
