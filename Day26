@@ -1,12 +1,3 @@
-/*Explanation 
-there many questions i asked hima and give me a good explanation */
-
-"""open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih
-from chrome Naim.benalaya.officile@gmail.com"""
-#https://chatgpt.com/c/6782e478-73dc-8006-a597-e2fbbb725239
-
-"the IDE online"
-/*https://sqliteonline.com/*/
 
 
 
@@ -85,5 +76,6 @@ INNER JOIN VARIABLES AS LeftOperand
   ON (Expressions.left_operand = LeftOperand.name)
 INNER JOIN VARIABLES AS RightOperand
   ON (Expressions.right_operand = RightOperand.name);
+
 
 
