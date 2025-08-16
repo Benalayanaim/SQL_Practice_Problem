@@ -1,12 +1,4 @@
-/*Explanation 
-there many questions i asked hima and give me a good explanation */
 
-"open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih"
-
-#https://chatgpt.com/c/677d8209-f5bc-800f-acef-bd1b6c0342c8
-
-"the IDE online"
-/*https://sqliteonline.com/*/
 
 
 
@@ -71,5 +63,6 @@ GROUP BY
 ORDER BY 
     student_number DESC, 
     d.dept_name;
+
 
 
