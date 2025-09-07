@@ -1,12 +1,4 @@
-/*Explanation 
-there many questions i asked hima and give me a good explanation */
 
-"""open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih
-from chrome Naim.benalaya.officile@gmail.com"""
-#https://chatgpt.com/c/67865ae7-05a4-8006-b037-4899b69b5f33
-
-"the IDE online"
-/*https://sqliteonline.com/*/
 
 
 /****************************************************************************************************************************/
@@ -110,3 +102,4 @@ select
 round( count(distinct player_id)::numeric / (select count(distinct player_id) from Activity), 2 ) fraction
 from cte
 where rn = 1 and date_diff = 1
+
