@@ -1,0 +1,172 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+
+"""open this link for Chatgpt mte3ii 
+Chrome from Naim.benalaya.officeil@gmail.com"""
+#https://chatgpt.com/c/67891fa8-afbc-8006-9586-73a6ef232ddf
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+
+/****************************************************************************************************************************/
+
+/****************************************************************************************************************************/
+"Site https://platform.stratascratch.com/coding?difficulties=1&is_freemium=0&code_type=1"
+
+#Problem 1
+#https://platform.stratascratch.com/coding/10540-calculate-average-score?code_type=1
+
+
+
+    
+/**solution 1**/ 
+SELECT
+    project_id,
+    ROUND(AVG(score), 2) AS average_score
+FROM
+    project_data
+GROUP BY
+    project_id
+HAVING
+    COUNT(DISTINCT team_member_id) > 1
+ORDER BY
+    project_id;
+
+
+-- Solution 2: 
+WITH TeamMemberCount AS (
+    SELECT
+        project_id,
+        COUNT(DISTINCT team_member_id) AS team_member_count
+    FROM
+        project_data
+    GROUP BY
+        project_id
+),
+QualifyingProjects AS (
+    SELECT
+        pd.project_id,
+        pd.score
+    FROM
+        project_data pd
+    INNER JOIN
+        TeamMemberCount tmc
+    ON
+        pd.project_id = tmc.project_id
+    WHERE
+        tmc.team_member_count > 1
+)
+SELECT
+    project_id,
+    ROUND(AVG(score), 2) AS average_score
+FROM
+    QualifyingProjects
+GROUP BY
+    project_id
+ORDER BY
+    project_id;
+
+/****************************************************************************************************************************/
+
+/****************************************************************************************************************************/
+
+#Problem 2
+#https://platform.stratascratch.com/coding/10539-user-activity-count?code_type=1
+
+
+
+    
+/**solution 1**/ 
+SELECT 
+    up.user_id,
+    COUNT(DISTINCT al.activity_type) AS unique_activity_count
+FROM 
+    user_profiles up
+LEFT JOIN 
+    activity_log al
+ON 
+    up.user_id = al.user_id
+GROUP BY 
+    up.user_id
+ORDER BY 
+    up.user_id;
+
+
+
+/****************************************************************************************************************************/
+
+/****************************************************************************************************************************/
+/****************************************************************************************************************************/
+
+/****************************************************************************************************************************/
+
+#Problem 3
+#https://platform.stratascratch.com/coding/10367-aggregate-listening-data?code_type=1
+
+
+    
+/**solution 1**/ 
+SELECT 
+    user_id,
+    ROUND(SUM(listen_duration) / 60) AS total_listen_duration,
+    COUNT(DISTINCT CASE WHEN listen_duration > 0 THEN song_id END) AS unique_song_count
+FROM 
+    listening_habits
+GROUP BY 
+    user_id
+ORDER BY 
+    user_id;
+
+
+-- Solution 2: 
+SELECT 
+    user_id,
+    CEIL(SUM(listen_duration) / 60.0) AS total_listen_duration,
+    COUNT(DISTINCT CASE WHEN listen_duration > 0 THEN song_id ELSE NULL END) AS unique_song_count
+FROM 
+    listening_habits
+GROUP BY 
+    user_id
+ORDER BY 
+    user_id;
+
+"Resource CEIL"
+--https://neon.tech/postgresql/postgresql-math-functions/postgresql-ceil  
+/****************************************************************************************************************************/
+
+/****************************************************************************************************************************/
+
+#Problem 4
+#https://platform.stratascratch.com/coding/10363-weekly-orders-report?code_type=1
+
+
+    
+/**solution 1**/ 
+SELECT 
+    week,
+    SUM(quantity) AS total_quantity
+FROM 
+    orders_analysis
+WHERE 
+    week BETWEEN '2023-01-01' AND '2023-03-31'
+GROUP BY 
+    week
+ORDER BY 
+    week;
+
+
+-- Solution 2: 
+SELECT 
+    week,
+    SUM(quantity) AS total_quantity
+FROM 
+    orders_analysis
+WHERE 
+    EXTRACT(YEAR FROM week) = 2023 
+    AND EXTRACT(QUARTER FROM week) = 1
+GROUP BY 
+    week
+ORDER BY 
+    week;

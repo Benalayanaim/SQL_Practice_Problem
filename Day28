@@ -1,0 +1,112 @@
+/*Explanation 
+there many questions i asked hima and give me a good explanation */
+
+"""open this link for Chatgpt mte3ii mouch elii dima nestaaamill fiih
+from chrome Naim.benalaya.officile@gmail.com"""
+#https://chatgpt.com/c/67865ae7-05a4-8006-b037-4899b69b5f33
+
+"the IDE online"
+/*https://sqliteonline.com/*/
+
+
+/****************************************************************************************************************************/
+
+/****************************************************************************************************************************/
+
+#Problem 1
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/Game%20Play%20Analysis%203.sql
+#https://leetcode.ca/2017-05-17-534-Game-Play-Analysis-III/
+
+/**solution 1**/ 
+SELECT
+    player_id,
+    event_date,
+    SUM(games_played) OVER (
+        PARTITION BY player_id
+        ORDER BY event_date
+    ) AS games_played_so_far
+FROM Activity;
+
+
+"With self join"
+-- Solution 2: 
+SELECT
+    t1.player_id,
+    t1.event_date,
+    SUM(t2.games_played) AS games_played_so_far
+FROM
+    Activity AS t1,
+    Activity AS t2
+WHERE t1.player_id = t2.player_id AND t1.event_date >= t2.event_date
+GROUP BY 1, 2;
+
+
+
+
+/****************************************************************************************************************************/
+
+/****************************************************************************************************************************/
+
+#Problem 2
+#https://github.com/mrinal1704/SQL-Leetcode-Challenge/blob/master/Medium/Game%20Play%20Analysis%204.sql
+#https://leetcode.com/problems/game-play-analysis-iv/
+
+/*Solution 1*/
+
+-- Write your PostgreSQL query statement below
+select 
+  round(
+    count(player_id) /(
+      select 
+        count(distinct player_id)::decimal
+      from 
+        Activity
+    ), 
+    2
+  ) as fraction 
+from 
+  Activity 
+where 
+  (player_id, event_date) in (
+    select 
+      player_id, 
+      min(event_date) + 1 
+    from 
+      Activity 
+    group by 
+      player_id
+  )
+
+
+/*Solution 2*/
+
+WITH ct as ( 
+    SELECT 
+        player_id,
+        event_date,
+        min(event_date) over(partition by player_id) as first_date
+    FROM Activity 
+)
+
+select 
+    ROUND(
+        CAST(COUNT(DISTINCT player_id) AS numeric)
+        / 
+        (SELECT COUNT(DISTINCT player_id) FROM Activity)
+        , 2
+    ) as fraction
+from ct
+where event_date = first_date + INTERVAL '1 day';
+
+
+/*Solution 3*/
+with cte as (select
+player_id,
+lead(event_date, 1) over(partition by player_id order by event_date) - event_date date_diff,
+row_number() over(partition by player_id order by event_date) rn
+from Activity)
+
+select
+round( count(distinct player_id)::numeric / (select count(distinct player_id) from Activity), 2 ) fraction
+from cte
+where rn = 1 and date_diff = 1
